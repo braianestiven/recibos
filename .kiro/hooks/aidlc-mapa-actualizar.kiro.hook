@@ -1,0 +1,13 @@
+{
+  "name": "aidlc-mapa-actualizar",
+  "version": "1.0.0",
+  "description": "Al guardar aidlc-state.md, pide al agente regenerar el mapa HTML del flujo AI-DLC.",
+  "when": {
+    "type": "fileEdited",
+    "patterns": ["**/aidlc-state.md"]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Se guardó aidlc-state.md. Regenera aidlc/mapa-aidlc.html con el estado actual siguiendo .kiro/steering/aidlc-mapa.md: lee aidlc-docs/aidlc-state.md (y Product-Definition/state/session-index.md para Ideation), muestra las fases y etapas con su estado real (completada, en curso, pendiente, omitida), marca 'Estás aquí' con el agente activo y la próxima acción, y actualiza la fecha y hora. Solo escribe aidlc/mapa-aidlc.html. No modifiques aidlc-state.md ni ningún archivo del framework AI-DLC (.kiro/steering/core-workflow.md, .kiro/aidlc-*, aws-aidlc-rule-details/)."
+  }
+}

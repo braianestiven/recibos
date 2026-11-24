@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="refresh" content="5">
+<title>Mapa del flujo AI-DLC — Migración de recibos</title>
+<style>
+  :root {
+    --done: #2e7d32;
+    --done-bg: #e8f5e9;
+    --now: #1565c0;
+    --now-bg: #e3f2fd;
+    --pending: #757575;
+    --pending-bg: #f5f5f5;
+    --skip: #9e6a00;
+    --skip-bg: #fff8e1;
+    --line: #cfd8dc;
+    --ink: #212121;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Segoe UI", system-ui, Arial, sans-serif;
+    margin: 0;
+    background: #fafafa;
+    color: var(--ink);
+    line-height: 1.5;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 24px 20px 48px; }
+  header h1 { margin: 0 0 4px; font-size: 1.5rem; }
+  header p { margin: 2px 0; color: #455a64; }
+  .meta { font-size: .85rem; color: #607d8b; margin-top: 8px; }
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 10px;
+    margin: 20px 0 8px; font-size: .85rem;
+  }
+  .legend span {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); background: #fff;
+  }
+  .dot { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+  .d-done { background: var(--done); }
+  .d-now { background: var(--now); }
+  .d-pending { background: var(--pending); }
+  .d-skip { background: var(--skip); }
+
+  .phase {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #fff;
+    margin: 16px 0;
+    overflow: hidden;
+  }
+  .phase > .head {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; padding: 14px 18px;
+    background: #f7f9fb; border-bottom: 1px solid var(--line);
+  }
+  .phase > .head .title { font-weight: 700; font-size: 1.08rem; }
+  .phase > .head .state {
+    font-size: .78rem; font-weight: 700; letter-spacing: .4px;
+    text-transform: uppercase; padding: 3px 10px; border-radius: 999px;
+  }
+  .st-done { color: var(--done); background: var(--done-bg); }
+  .st-now { color: var(--now); background: var(--now-bg); }
+  .st-pending { color: var(--pending); background: var(--pending-bg); }
+
+  ul.steps { list-style: none; margin: 0; padding: 8px 10px 14px; }
+  ul.steps li {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 10px 12px; border-radius: 10px; margin: 4px 0;
+    border: 1px solid transparent;
+  }
+  ul.steps li .icon {
+    flex: 0 0 auto; width: 22px; height: 22px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .8rem; font-weight: 700; color: #fff; margin-top: 1px;
+  }
+  .i-done { background: var(--done); }
+  .i-now { background: var(--now); }
+  .i-pending { background: var(--pending); }
+  .i-skip { background: var(--skip); }
+  ul.steps li .body .name { font-weight: 600; }
+  ul.steps li .body .desc { font-size: .88rem; color: #546e7a; margin-top: 2px; }
+  li.is-now { background: var(--now-bg); border-color: #90caf9; }
+
+  .here {
+    margin: 22px 0 8px; padding: 16px 18px;
+    border: 2px solid var(--now); border-radius: 12px; background: var(--now-bg);
+  }
+  .here .tag {
+    display: inline-block; font-size: .75rem; font-weight: 700; letter-spacing: .5px;
+    text-transform: uppercase; color: var(--now); margin-bottom: 6px;
+  }
+  .here h2 { margin: 2px 0 6px; font-size: 1.15rem; }
+  .here .row { margin: 4px 0; }
+  .here .row b { color: #0d47a1; }
+  footer { margin-top: 28px; font-size: .8rem; color: #78909c; text-align: center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Mapa del flujo AI-DLC</h1>
+    <p>Proyecto: Migración del módulo de recibos por lote (weboffice) — Brownfield.</p>
+    <p class="meta">Fase actual: <b>INCEPTION</b> · Profundidad: Comprehensive · Interacción: conversacional</p>
+    <p class="meta">Última actualización del mapa: <b>2026-11-24 16:29</b> (se refresca solo cada 5&nbsp;s)</p>
+  </header>
+
+  <div class="legend">
+    <span><i class="dot d-done"></i> Completada</span>
+    <span><i class="dot d-now"></i> En curso — estás aquí</span>
+    <span><i class="dot d-pending"></i> Pendiente</span>
+    <span><i class="dot d-skip"></i> Omitida / No aplica</span>
+  </div>
+
+  <!-- Aquí estás: resumen -->
+  <div class="here">
+    <span class="tag">Estás aquí</span>
+    <h2>Inception → Units Generation · Parte 2 (generación) completa</h2>
+    <div class="row"><b>Estado:</b> en curso — la generación de las unidades está terminada; esperamos la aprobación del usuario. El diseño se ajustó por la extensión de seguridad (AD-09, AD-13 y AD-14 revisadas; AD-23 a AD-28 nuevas).</div>
+    <div class="row"><b>Agente activo:</b> Inception / Units Generation.</div>
+    <div class="row"><b>Extensiones (decididas el 24-11):</b> Security Baseline = Sí (todas las reglas SECURITY bloqueantes); Resiliency Baseline = No; Property-Based Testing = Parcial (bloqueantes PBT-02, PBT-03, PBT-07, PBT-08 y PBT-09; el resto orientativas).</div>
+    <div class="row"><b>Próxima acción:</b> aprobar Units Generation y pasar a <b>Construction</b> → U1 recibos_service, Functional Design.</div>
+  </div>
+
+  <!-- FASE 1: IDEATION / DISCOVERY -->
+  <section class="phase">
+    <div class="head">
+      <span class="title">1 · Ideation / Discovery</span>
+      <span class="state st-done">Completada</span>
+    </div>
+    <ul class="steps">
+      <li>
+        <span class="icon i-done">✓</span>
+        <span class="body"><span class="name">Entrevistas de negocio y técnica</span>
+        <span class="desc">Ambas líneas completas; análisis del sistema existente, plantillas y utils_oas.</span></span>
+      </li>
+      <li>
+        <span class="icon i-done">✓</span>
+        <span class="body"><span class="name">Join y resolución de contradicciones</span>
+        <span class="desc">Unión hecha (24-11); C-1..C-6 resueltas; quedaron 15 preguntas abiertas.</span></span>
+      </li>
+      <li>
+        <span class="icon i-skip">—</span>
+        <span class="body"><span class="name">Boceto visual</span>
+        <span class="desc">Omitido por elección del usuario.</span></span>
+      </li>
+      <li>
+        <span class="icon i-done">✓</span>
+        <span class="body"><span class="name">Handoff a Inception</span>
+        <span class="desc">Entregado el 2026-11-24.</span></span>
+      </li>
+    </ul>
+  </section>
+
+  <!-- FASE 2: INCEPTION -->
+  <section class="phase">
+    <div class="head">
+      <span class="title">2 · Inception</span>
+      <span class="state st-now">En curso</span>
+    </div>
+    <ul class="steps">
+      <li>
+        <span class="icon i-done">✓</span>
+        <span class="body"><span class="name">Workspace Detection</span>
+        <span class="desc">Brownfield; Discovery completo; sin estado AI-DLC previo.</span></span>
+      </li>
+      <li>
+        <span class="icon i-skip">—</span>
+        <span class="body"><span class="name">Reverse Engineering</span>
+        <span class="desc">No aplica: ya existe el análisis de Discovery; se referencia, no se regenera.</span></span>
+      </li>
+      <li>
+        <span class="icon i-done">✓</span>
+        <span class="body"><span class="name">Requirements Analysis</span>
+        <span class="desc">Aprobado (24-11). 15 preguntas abiertas resueltas; documento de requisitos generado. Extensiones decididas: Seguridad = Sí, Resiliencia = No, Property-Based Testing = Parcial.</span></span>
+      </li>
+      <li>
+        <span class="icon i-done">✓</span>
+        <span class="body"><span class="name">User Stories</span>
+        <span class="desc">Aprobado (24-11). 15 historias; hoy 11 listas y 4 bloqueadas (US-03, US-05, US-08, US-11).</span></span>
+      </li>
+      <li>
+        <span class="icon i-done">✓</span>
+        <span class="body"><span class="name">Workflow Planning</span>
+        <span class="desc">Aprobado (24-11) → plan de ejecución con las unidades U1 y U2.</span></span>
+      </li>
+      <li>
+        <span class="icon i-done">✓</span>
+        <span class="body"><span class="name">Application Design</span>
+        <span class="desc">Aprobado (24-11). Artefactos AD-01 a AD-22 y api-contract.md en inception/application-design/.</span></span>
+      </li>
+      <li class="is-now">
+        <span class="icon i-now">●</span>
+        <span class="body"><span class="name">Units Generation — estás aquí (Parte 2: generación completa)</span>
+        <span class="desc">Unidades generadas (U1 recibos_service, U2 recibos_mf) con el diseño ajustado por la extensión de seguridad. Esperando la aprobación del usuario para pasar a Construction.</span></span>
+      </li>
+    </ul>
+  </section>
+
+  <!-- FASE 3: CONSTRUCTION -->
+  <section class="phase">
+    <div class="head">
+      <span class="title">3 · Construction</span>
+      <span class="state st-pending">Pendiente</span>
+    </div>
+    <ul class="steps">
+      <li>
+        <span class="icon i-pending">○</span>
+        <span class="body"><span class="name">U1 · recibos_service</span>
+        <span class="desc">Functional Design, NFR (requisitos y diseño), Infrastructure Design, Code Generation.</span></span>
+      </li>
+      <li>
+        <span class="icon i-pending">○</span>
+        <span class="body"><span class="name">U2 · recibos_mf</span>
+        <span class="desc">Functional Design (mínima), NFR Requirements (mínima), Infra (mínima), Code Generation.</span></span>
+      </li>
+      <li>
+        <span class="icon i-pending">○</span>
+        <span class="body"><span class="name">Build and Test</span>
+        <span class="desc">Compilación, pruebas unitarias y CI.</span></span>
+      </li>
+    </ul>
+  </section>
+
+  <!-- FASE 4: OPERATION -->
+  <section class="phase">
+    <div class="head">
+      <span class="title">4 · Operation</span>
+      <span class="state st-pending">Pendiente</span>
+    </div>
+    <ul class="steps">
+      <li>
+        <span class="icon i-pending">○</span>
+        <span class="body"><span class="name">Despliegue y operación</span>
+        <span class="desc">Aún no iniciada.</span></span>
+      </li>
+    </ul>
+  </section>
+
+  <footer>
+    Generado a partir de aidlc-docs/aidlc-state.md y Product-Definition/state/session-index.md ·
+    Esta página se actualiza sola cada 5 segundos.
+  </footer>
+</div>
+</body>
+</html>

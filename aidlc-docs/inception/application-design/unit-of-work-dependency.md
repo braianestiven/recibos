@@ -1,0 +1,71 @@
+# Dependencias de las unidades
+
+## 1. Entre unidades
+
+| Desde \ Hacia | U1 `recibos_service` | U2 `recibos_mf` |
+|---|---|---|
+| U1 | — | Ninguna |
+| U2 | Contrato de la API (`api-contract.md`) para construir; API publicada en WSO2 AM y su origen en la lista de CORS (D11) para funcionar | — |
+
+U1 no depende de U2. U2 se puede construir apenas exista el contrato. Para funcionar en un ambiente necesita que U1 ya esté desplegada y publicada.
+
+Texto equivalente del diagrama: el root institucional monta U2; U2 llama a U1 a través de WSO2 AM; U1 lee Oracle, "parametros" y WSO2 IS, y escribe en MySQL y S3.
+
+```mermaid
+flowchart LR
+    ROOT["Root y core institucionales"] -->|"monta"| U2["U2 recibos_mf"]
+    U2 -->|"HTTPS con token Bearer"| AM["WSO2 AM"]
+    AM --> U1["U1 recibos_service"]
+    U1 --> IS["WSO2 IS: userinfo"]
+    U1 --> PAR["parametros: lectura"]
+    U1 --> ORA[("Oracle: lectura")]
+    U1 --> MY[("MySQL: solicitud*")]
+    U1 --> S3B[("S3 privado")]
+```
+
+## 2. Con sistemas externos
+
+| Sistema | U1 | U2 | Tipo |
+|---|---|---|---|
+| Oracle académico | Lectura | — | SQL sobre TLS |
+| MySQL (`solicitud*`) | Lectura y escritura | — | SQL sobre TLS, transacciones |
+| S3 | Escritura | — | API de AWS |
+| SSM Parameter Store | Lectura al arrancar | — | API de AWS |
+| X-Ray | Trazas | — | Daemon |
+| CloudWatch Logs | Auditoría y registros | Registros de acceso | stdout del contenedor |
+| WSO2 IS | `/oauth2/userinfo` en cada petición | Inicio de sesión a través del core | HTTPS |
+| WSO2 AM | Publica la API; throttling (D12) | Llama a la API a través de él | HTTPS |
+| Servicio "parametros" | `GET /v1/parametro/{id}` al iniciar cada lote | — | HTTPS |
+| Root y core institucionales | — | Lo montan y le entregan el token (D9) | single-spa |
+| `configuracion_cliente` | — | Aplicación, rol y menú del microcliente | Registro manual |
+| Plantilla `oas_cliente` | — | Base del código | Repositorio GitHub |
+| Repositorio de assets | — | Estilos y logos institucionales | Repositorio GitHub |
+| "Solicitados" | Lee lo que U1 escribe (sin cambios) | — | Base de datos compartida |
+
+## 3. Insumos pendientes por unidad
+
+| Insumo | Unidad | Se necesita en | Quién |
+|---|---|---|---|
+| D1 Plantilla de pregrado de 13 columnas | U1 | Functional Design | ARC |
+| D2 Plantilla de posgrado SMLV | U1 | Functional Design | ARC |
+| D3 Valor de `cuota` en pregrado y demás estados | U1 | Functional Design | DBA / dueño de "Solicitados" |
+| D4 DDL real, prefijo de tablas y llaves primarias | U1 | Code Generation | DBA |
+| D5 Origen de los festivos | U1 | Functional Design | DBA / OATI |
+| D6 Campo del valor de cada regla e ids por ambiente | U1 | Code Generation | Usuario / OATI |
+| D7 SSM, retención de registros, límites de S3 | U1, U2 | Infrastructure Design | Infraestructura / Seguridad |
+| D8 Identificador del rol ARC | U1 | Code Generation | Arquitectura |
+| D9 Cómo entrega el core el token | U2 | Functional Design | Se verifica en `oas_cliente` |
+| D10 Crear los parámetros en "parametros" | U1 | Antes de las pruebas en test | OATI / ARC |
+| D11 Origen de `recibos_mf` por ambiente (CORS) | U1, U2 | U1 Infrastructure Design | Arquitectura / infraestructura |
+| D12 Throttling en WSO2 AM | U1 | Infrastructure Design | Arquitectura |
+| OQ-T-1 Versiones de Angular, TypeScript y Node | U2 | NFR Requirements | Se verifica en `oas_cliente` |
+| Entorno para correr pruebas (no hay Python, Node ni Docker en esta máquina) | U1, U2 | Antes de U1 Code Generation | Usuario |
+| P-1, P-2, P-6, P-10, P-14 | U1 | Functional Design | Usuario / ARC |
+
+## 4. Orden de despliegue en cada ambiente
+
+1. U1: imagen en ECR, servicio en ECS, API publicada en WSO2 AM y suscrita por la aplicación del microcliente.
+2. U2: imagen en ECR, servicio en ECS, registro en el import map del root y menú en `configuracion_cliente`.
+3. En U1: el origen de U2 queda en la lista de CORS (D11).
+
+Si U1 cambia el contrato de forma incompatible, se cambia primero el contrato y después las dos unidades, en ese orden.
