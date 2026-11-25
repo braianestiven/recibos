@@ -20,7 +20,7 @@
 - [x] Validar límites y dependencias de las unidades: U1 no depende de U2; U2 depende solo del contrato y del despliegue de U1
 - [x] Verificar que todas las historias tengan unidad: 15 de 15
 - [x] Resumen de cumplimiento de las extensiones activadas (seguridad y pruebas basadas en propiedades)
-- [ ] Aprobación del usuario
+- [x] Aprobación del usuario (2026-11-25T16:45:50Z, "aprobar y continau", junto con C6 b, C7 a y C8 a)
 
 ## Unidades (fijadas por C-5 y el plan aprobado)
 

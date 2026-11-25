@@ -8,9 +8,9 @@
 | US-04 Formato de posgrado por créditos | Especificación y validación de la plantilla | — | ✅ Lista |
 | US-05 Formato de posgrado SMLV | Especificación y validación de la plantilla | — | 🔒 D2 |
 | US-06 Validar estudiantes en Oracle | Validaciones académicas y lecturas en bloque | — | ✅ Lista |
-| US-07 Solicitudes de pregrado | Cuota con las fechas de la plantilla, exenciones y conceptos | — | 🔒 D1, C6, C7 |
-| US-08 Solicitudes de posgrado | Cuotas, fechas, exenciones y conceptos | — | 🔒 D5, C6, C7 (SMLV: D2) |
-| US-09 Cancelar solicitudes sin imprimir | Cancelación en el periodo vigente, también para los rechazados (AD-30) | — | 🔒 C8 |
+| US-07 Solicitudes de pregrado | Cuota con las fechas de la plantilla, exenciones y conceptos | — | 🔒 D1 |
+| US-08 Solicitudes de posgrado | Cuotas, fechas, exenciones y conceptos | — | 🔒 F14, F15 (SMLV: D2) |
+| US-09 Cancelar solicitudes sin imprimir | Cancelación de las sin imprimir de cualquier periodo (C8), también para los rechazados (AD-30) | — | ✅ Lista |
 | US-10 Guardar la solicitud completa o no guardarla | Transacción por solicitud nueva; la cancelación va aparte (AD-30) | — | ✅ Lista |
 | US-11 Entregar las solicitudes a "Solicitados" | Escritura en las tablas `solicitud*` | — | 🔒 D4 |
 | US-12 Ver el resumen del lote | `ResumenLote` en la respuesta | Pantalla de resumen: los que se subieron y los que no, con el motivo | ✅ Lista |

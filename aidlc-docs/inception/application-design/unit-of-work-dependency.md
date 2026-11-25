@@ -46,11 +46,12 @@ flowchart LR
 
 | Insumo | Unidad | Se necesita en | Quién |
 |---|---|---|---|
-| D1 Plantilla de pregrado sin Reingreso y con las fechas de pago (C3) | U1 | Functional Design | ARC |
+| D1 Archivo de la plantilla de pregrado sin Reingreso y con la fecha ordinaria (C3, F8) | U1 | Functional Design | ARC |
 | D2 Plantilla de posgrado SMLV | U1 | Functional Design | ARC |
 | D3 ~~Valor de `cuota` en pregrado y demás estados~~ resuelta el 2026-11-25 (RE-21, A15) | U1 | — | — |
 | D4 DDL real, prefijo de tablas y llaves primarias | U1 | Code Generation | DBA |
-| D5 Origen de los festivos | U1 | Functional Design | DBA / OATI |
+| D5 Tabla de festivos de weboffice (F9; los fines de semana no cuentan, F10) | U1 | Code Generation (dependencia técnica) | DBA |
+| F14, F15 (la Secretaría de Educación frente a C6 y C7) | U1 | Functional Design | Usuario |
 | D6 Campo del valor de cada regla e ids por ambiente | U1 | Code Generation | Usuario / OATI |
 | D7 SSM, retención de registros, límites de S3 | U1, U2 | Infrastructure Design | Infraestructura / Seguridad |
 | D8 Identificador del rol ARC | U1 | Code Generation | Arquitectura |
@@ -62,7 +63,7 @@ flowchart LR
 | OQ-T-1 Versiones de Angular, TypeScript y Node | U2 | NFR Requirements | Se verifica en `oas_cliente` |
 | Herramientas con las versiones vigentes (C4): Docker y Python 3.14 ya están; Node LTS con soporte antes de U2 | U1, U2 | Antes de U1 Code Generation | Usuario |
 | P-1, P-2, P-6, P-10 (P-14 ya no aplica, C2) | U1 | Functional Design | Usuario / ARC |
-| C6, C7, C8 (respuesta sobre A14 y hallazgos de "Solicitados") | U1 | Antes de Functional Design | Usuario |
+| ~~C6, C7, C8~~ respondidas el 2026-11-25 (C6 = b, C7 = a, C8 = a) | U1 | — | — |
 
 ## 4. Orden de despliegue en cada ambiente
 

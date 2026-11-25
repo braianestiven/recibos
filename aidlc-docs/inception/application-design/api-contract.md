@@ -77,7 +77,8 @@ Valores de `motivo` y texto de referencia de `mensaje` (los textos finales se aj
 
 | `motivo` | `mensaje` |
 |---|---|
-| `CODIGO_INVALIDO` | Código de estudiante inválido |
+| `CODIGO_INVALIDO` | Código de estudiante inválido, o "Falta el código del estudiante" si la fila tiene datos y no tiene código (F3) |
+| `CODIGO_REPETIDO` | El código ya está en la fila N; solo se procesa la primera aparición (F2) |
 | `ESTUDIANTE_NO_ENCONTRADO` | El código no está registrado |
 | `SIN_VALOR_MATRICULA` | Sin información de matrícula; solicitar por oficio |
 | `ESTADO_NO_PERMITIDO` | El estado del estudiante no permite generar el recibo |
@@ -85,9 +86,11 @@ Valores de `motivo` y texto de referencia de `mensaje` (los textos finales se aj
 | `NO_TERMINACION_MATERIAS` | El estado del estudiante es diferente de terminación de materias |
 | `SIN_PERIODO_VIGENTE` | No hay periodo vigente para el proyecto curricular del estudiante. Repórtelo al área de sistemas (RE-05) |
 | `CUOTAS_INVALIDAS` | El número de cuotas es obligatorio y debe estar entre 1 y 3 (RE-03, RE-04) |
-| `FECHA_INVALIDA` | Falta la fecha o es inválida en la cuota indicada (RE-06) |
+| `FECHA_INVALIDA` | Falta la fecha, es inválida, es anterior al día de la carga o vence antes que la cuota anterior, en la cuota indicada (RE-06, F7) |
+| `UNIDAD_INVALIDA` | Los créditos o SMLV son obligatorios y deben ser mayores que 0 (F6) |
+| `NIVEL_NO_CORRESPONDE` | El nivel del proyecto curricular del estudiante no corresponde a la plantilla (F5) |
 | `PORCENTAJE_INVALIDO` | El porcentaje debe estar entre 0 y 100 |
-| `DESCUENTOS_NO_ACUMULABLES` | Solo se puede marcar un descuento además de la votación (C2) |
+| `DESCUENTOS_NO_ACUMULABLES` | Solo se puede marcar un descuento además de la votación (C2); en posgrado, además de la votación y de la Secretaría de Educación (F12) |
 | `PORCENTAJES_NO_SUMAN_100` | Los porcentajes de las cuotas deben sumar 100 |
 | `ERROR_GUARDADO` | Error al guardar la solicitud |
 

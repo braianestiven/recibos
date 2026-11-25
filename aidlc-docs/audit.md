@@ -259,3 +259,38 @@ V5 c: escritorio y movil., aprobar y continuar, pero hazlos mas bonitos
 **Cumplimiento de PBT**: N/A en esta etapa. Si C7 = A, el invariante de PBT-03 de U1 pasa a "descuento + votación ≤ 100%".
 **Context**: INCEPTION → Units Generation pendiente de aprobación; Reverse Engineering ampliada con "Solicitados" (sin nueva compuerta).
 ---
+## Units Generation — aprobación y aclaraciones C6 a C8
+**Timestamp**: 2026-11-25T16:45:50Z
+**User Input**:
+```text
+c6 b, c7 a, porque no supera el 100%, c8 a, aprobar y continau
+
+continuar
+```
+**AI Response**: C6 = b: la votación automática solo se registra en filas con un descuento marcado; se mantiene C1. C7 = a: si el descuento y la votación pasan de 100%, se registra solo el descuento, en las dos plantillas y para la votación marcada o la automática; reemplaza el umbral de 90% por un tope de 100% del dominio, que con la votación en 10% da el mismo resultado para la automática. C8 = a: se cancelan las solicitudes sin imprimir de todos los periodos, como hoy; revierte P-7 y cambia A12 (basta con saber quién es el estudiante; el estudiante cuyo proyecto no tiene periodo vigente también cancela). A14 queda resuelto. Archivos: requirements.md (RF-06 CA3, RF-08, §4.A puntos 4 y 6, A12, A14, P-7, P-13, cambios acordados 4, 6 y 9, §12.6), stories.md (US-06 a US-10, tabla, puntos por confirmar y registro de cambios), component-methods.md (sin umbral; `exenciones.seleccionar`; `cancelar_sin_imprimir` sin periodo), components.md, application-design.md (AD-16, AD-30, riesgos), services.md (paso 13), component-dependency.md, unit-of-work.md (PBT-03), unit-of-work-story-map.md, unit-of-work-dependency.md, execution-plan.md y los artefactos de reverse-engineering/ (story-code-traceability, business-overview, timestamp y aclaraciones con sus respuestas). Historias: 10 listas y 5 bloqueadas (US-03 D1, US-05 D2, US-07 D1, US-08 D5/D2, US-11 D4). En ese turno no se alcanzó a enviar la respuesta al usuario; se envía en el siguiente, junto con el inicio de U1 Functional Design.
+**Aprobación**: "aprobar y continau" (por "aprobar y continuar") aprueba Units Generation de forma explícita; la compuerta había dicho que se podía aprobar y responder C6 a C8 en el mismo mensaje. Se pasa a CONSTRUCTION → U1 recibos_service, Functional Design.
+**Cumplimiento de seguridad (Units Generation)**: sin hallazgos bloqueantes. C7 evita recibos con valor negativo en Oracle (integridad de los datos de cobro); C8 no cambia los controles de acceso ni la auditoría de la cancelación (AD-25).
+**Cumplimiento de PBT**: N/A en Units Generation; el invariante de PBT-03 de U1 suma "el descuento y la votación suman como máximo 100%" (C7).
+**Context**: INCEPTION → Units Generation aprobada; INCEPTION completa.
+---
+## U1 recibos_service — Functional Design: inicio, plan y preguntas
+**Timestamp**: 2026-11-25T17:03:33Z
+**User Input**:
+```text
+continuar
+
+continuar
+
+continuar
+
+continuar
+```
+**AI Response**: Se cargó `construction/functional-design.md` y se analizó el contexto de U1 (unidad, historias, requisitos, diseño de aplicación, hallazgos RE-01 a RE-26 y aclaraciones C1 a C8). Se creó aidlc-docs/construction/plans/recibos_service-functional-design-plan.md con 10 pasos, las decisiones de diseño que no necesitan pregunta, los insumos pendientes (archivos de D1 y D2) y 13 preguntas: F1 lote de más de 1000 filas (P-1), F2 código repetido (P-2), F3 fila sin código, F4 celdas con solo espacios, F5 nivel del estudiante frente a la plantilla, F6 créditos o SMLV (P-6), F7 fechas vencidas o en desorden, F8 fechas de la plantilla de pregrado (D1), F9 origen de los festivos (D5), F10 sábados y domingos (D5), F11 origen de los porcentajes de las exenciones (revisa P-15 por C7 y RE-22), F12 Secretaría de Educación frente a C2 (RE-24) y F13 exportar los no subidos (P-10). Las mismas preguntas se hacen en el chat. No se generan artefactos hasta tener las respuestas (paso 5 de la regla).
+**Context**: CONSTRUCTION → U1 recibos_service → Functional Design, esperando las respuestas F1 a F13.
+---
+## U1 recibos_service — Functional Design: respuestas F1 a F13
+**Timestamp**: 2026-11-25T17:18:02Z
+**User Input**: "f1 a, f2 b, f3 a, f4 a, f5 a, f6 a, f7 b, f8 a, f9 c, f10  a, f11 a, f12 b, f13 a"
+**AI Response**: Respuestas registradas en aidlc-docs/construction/plans/recibos_service-functional-design-plan.md y aplicadas. F1 a: lote de más de 1000 filas rechazado completo (RF-02 CA5). F2 b: código repetido, solo la primera aparición; las siguientes son `CODIGO_REPETIDO` y no se procesan, así que no cancelan nada (si cancelaran, borrarían la solicitud de la primera aparición) (RF-03 CA8). F3 a: fila con datos y sin código = `CODIGO_INVALIDO` (RF-02 CA6). F4 a: una celda con solo espacios no está marcada (RF-06 CA5). F5 a: nivel del proyecto frente a la plantilla, `NIVEL_NO_CORRESPONDE`, validado después del periodo vigente (RF-03 CA6, CA7). F6 a: créditos o SMLV obligatorios y mayores que 0, `UNIDAD_INVALIDA` (RF-05 CA5). F7 b: ninguna fecha ordinaria anterior al día de la carga y cuotas en orden (RF-05 CA4). F8 a: pregrado trae solo la fecha ordinaria; la extraordinaria se calcula (RF-05 CA1, CA3; D1 acotada). F9 c: festivos de la tabla de weboffice; el DBA la identifica (D5 pasa a dependencia técnica). F10 a: los fines de semana no mueven la fecha. F11 a: porcentajes de las exenciones de la tabla `exencion`, en solo lectura (RF-06 CA6; P-15 cambia en ese punto; D10 se reduce). F12 b: la Secretaría de Educación no cuenta para C2 (RF-06 CA4). F13 a: sin exportación (RF-11 CA4). Decisión de diseño anunciada en el plan y aplicada: porcentajes de cuota enteros (RF-05 CA6). Nuevos cambios acordados 13 a 19 y §12.8 en requirements.md. Historias: US-02 escenario 4; US-06 escenarios 2, 9 y 10; US-07 escenarios 1 y 11; US-08 escenarios 5, 7, 8, 12 y 13; US-12, US-15; puntos P-1, P-2, P-6, P-10 y P-15. Diseño: services.md (pasos 3, 7, 8, 9 y 11), api-contract.md (motivos `CODIGO_REPETIDO`, `UNIDAD_INVALIDA`, `NIVEL_NO_CORRESPONDE`), component-methods.md, unit-of-work.md (SECURITY-06), unit-of-work-story-map.md, unit-of-work-dependency.md, execution-plan.md. Ambigüedad detectada (paso 5 de la regla): F12 = b choca con C6 y C7, que se decidieron cuando la Secretaría contaba como descuento. Se creó aidlc-docs/construction/plans/recibos_service-functional-design-clarification-questions.md con F14 (¿la Secretaría entra en la suma de C7?) y F15 (¿la Secretaría sola activa la votación automática?). US-08 queda bloqueada por F14 y F15 (antes por D5). No se generan artefactos hasta resolverlas.
+**Context**: CONSTRUCTION → U1 recibos_service → Functional Design, esperando F14 y F15.
+---

@@ -18,13 +18,13 @@ Las dependencias apuntan hacia adentro: `interfaces` → `application` → `doma
 | Componente | Responsabilidad | Historias |
 |---|---|---|
 | `modelos` | Entidades y objetos de valor: `TipoPlantilla`, `HojaPlantilla`, `FilaPlantilla`, `Usuario`, `Estudiante`, `Periodo`, `ContextoCarrera`, `FechasPago`, `Cuota`, `Solicitud`, `MotivoRechazo`, `Rechazo`, `Procesado`, `ResumenLote`, `NuevoLote`, `Lote`, `Pagina` | Todas |
-| `reglas` | `ReglasLiquidacion`: todos los valores que llegan de "parametros" (estados, eventos, IDs de conceptos y exenciones, porcentajes, mapas columna → id, umbral de la votación automática, plazo de la fecha extraordinaria). Las fechas de pago vienen de la plantilla (C3) | US-06 a US-08, US-15 |
+| `reglas` | `ReglasLiquidacion`: todos los valores que llegan de "parametros" (estados, eventos, IDs de conceptos y exenciones, porcentajes, mapas columna → id, plazo de la fecha extraordinaria). Las fechas de pago vienen de la plantilla (C3) | US-06 a US-08, US-15 |
 | `plantillas` | Estructura de las tres plantillas (texto de A1, fila inicial, número de columnas, encabezados, rangos de columnas), identificación del tipo, validación de formato y extracción de filas | US-03, US-04, US-05 |
 | `validacion_filas` | Reglas de fila: código numérico; en posgrado, número de cuotas obligatorio de 1 a 3, fecha válida con año completo para cada cuota, porcentajes 0–100 y suma 100 | US-06, US-08 |
 | `validacion_estudiante` | Validaciones académicas en el orden actual: existencia, valor de matrícula, estado, proyecto activo, terminación de materias | US-06 |
 | `fechas` | Sumar días calendario y saltar festivos | US-08 |
 | `cuotas` | Cuota única de pregrado con las fechas de la plantilla (C3); cuotas de posgrado con porcentajes por defecto por posición | US-07, US-08 |
-| `exenciones` | Como máximo un descuento más la votación; con más de un descuento la fila no se sube (C2); votación marcada con cualquier descuento; automática con tope de 90% y solo si hay un descuento marcado (C1, A14; en revisión por C6 y C7) | US-07, US-08 |
+| `exenciones` | Como máximo un descuento más la votación; con más de un descuento la fila no se sube (C2); la votación, marcada o automática (la automática solo con un descuento marcado: C1, C6, A14), se registra si el descuento y la votación juntos no pasan de 100%; si pasan, queda solo el descuento (C7) | US-07, US-08 |
 | `conceptos` | Concepto de matrícula, concepto exclusivo de pregrado y conceptos marcados | US-07, US-08 |
 | `generador_solicitud` | Arma la `Solicitud` completa de un estudiante válido | US-07, US-08, US-11 |
 

@@ -95,7 +95,7 @@ Extensión de seguridad activa. Dónde se implementa o verifica cada regla:
 | SECURITY-03 Registro de aplicación | JSON con nivel y `request_id` (AD-24) | Registros de acceso del servidor estático, en JSON | NFR Design (U1), Infrastructure Design (U2) |
 | SECURITY-04 Cabeceras HTML | No sirve HTML en ambientes desplegados (AD-13); cabeceras institucionales en todas las respuestas | Cabeceras en el servidor estático; el HTML principal lo sirve el root institucional | Code Generation, Infrastructure Design |
 | SECURITY-05 Validación de entradas | pydantic, firma y tamaño del archivo, nombre del archivo, parámetros enlazados | Validación básica en el formulario; el control real está en U1 | Functional Design, Code Generation |
-| SECURITY-06 Mínimo privilegio | Oracle solo lectura; MySQL solo `solicitud*`; rol de tarea sin comodines | Sin permisos de AWS ni acceso a datos | Infrastructure Design |
+| SECURITY-06 Mínimo privilegio | Oracle solo lectura; MySQL: `solicitud*` y solo lectura de `exencion` (F11); solo lectura de la tabla de festivos de weboffice (F9, D5); rol de tarea sin comodines | Sin permisos de AWS ni acceso a datos | Infrastructure Design |
 | SECURITY-07 Red | API solo accesible por WSO2 AM; bases solo desde las tareas de U1 | Solo el balanceador público en 443 | Infrastructure Design |
 | SECURITY-08 Control de acceso | Token en cada petición, sin caché; rol en el backend; CORS explícito (AD-09, AD-14) | No decide permisos | Code Generation |
 | SECURITY-09 Endurecimiento | Imagen mínima, usuario sin privilegios, sin documentación desplegada (AD-27) | Versión de Angular con soporte; sin páginas de ejemplo; sin listado de directorios | NFR Requirements, Code Generation |
@@ -111,7 +111,7 @@ Extensión de seguridad activa. Dónde se implementa o verifica cada regla:
 | Regla | U1 | U2 |
 |---|---|---|
 | PBT-02 Ida y vuelta | Conversión fecha ↔ timestamp Unix (America/Bogota) | Por evaluar en U2 NFR Requirements |
-| PBT-03 Invariantes | Los porcentajes suman 100; la fecha extraordinaria no cae en festivo y es al menos 8 días después de la ordinaria; una solicitud lleva como máximo un descuento, y una fila con más de uno no se sube (C2); la votación aparece como máximo una vez | Por evaluar |
+| PBT-03 Invariantes | Los porcentajes suman 100; la fecha extraordinaria no cae en festivo y es al menos 8 días después de la ordinaria; una solicitud lleva como máximo un descuento, y una fila con más de uno no se sube (C2); el descuento y la votación de una solicitud suman como máximo 100% (C7); la votación aparece como máximo una vez | Por evaluar |
 | PBT-07 Generadores | Generadores de filas de plantilla, fechas, porcentajes y reglas que respetan los límites del negocio | — |
 | PBT-08 Reducción y reproducibilidad | Hypothesis con semilla registrada en CI | — |
 | PBT-09 Framework | Hypothesis (se confirma en U1 NFR Requirements) | fast-check, solo si aplica |

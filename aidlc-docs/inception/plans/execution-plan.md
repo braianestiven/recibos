@@ -88,11 +88,11 @@ flowchart LR
 |---|---|---|---|
 | Workflow Planning (resuelto 2026-11-24) | P-12 → mayor porcentaje; P-13 → regla actual de la votación | US-07 desbloqueada; US-08 sigue bloqueada por D5 y D2 | Usuario |
 | Reverse Engineering (resuelto 2026-11-25) | C1 a C5: C1 a (sin votación automática en filas sin exenciones marcadas), C2 b (más de un descuento: la fila no se sube; votación marcada con cualquier descuento), C3 b (fechas de pregrado desde la plantilla), C4 a (versiones actualizadas), C5 b (módulo de notas de ARC en la Fase 2) | US-08 sin C1 ni C2; US-07 pasa a depender de D1 | Usuario / ARC |
-| U1 Functional Design | D5: origen de los festivos y si sábados y domingos cuentan | US-08 | DBA / OATI |
-| U1 Functional Design | D1: plantilla de pregrado sin Reingreso y con las fechas de pago (A1, fila inicial, encabezados, columnas y formato de las fechas, y si trae la fecha extraordinaria) | US-03, US-07 | ARC |
+| U1 Functional Design | D5: ~~origen de los festivos y si sábados y domingos cuentan~~ decididos con F9 (tabla de weboffice) y F10 (no cuentan); falta que el DBA identifique la tabla, que ya es dependencia técnica | — | DBA |
+| U1 Functional Design | D1: plantilla de pregrado sin Reingreso y con las fechas de pago (A1, fila inicial, encabezados y posición de las columnas de la fecha ordinaria; F8 fijó que la extraordinaria se calcula) | US-03, US-07 | ARC |
 | U1 Functional Design | D2: plantilla de posgrado SMLV | US-05 y variante SMLV de US-08 | ARC |
-| U1 Functional Design | ~~D3~~ resuelta el 2026-11-25 con el código de "Solicitados" (RE-21, A15). C6, C7 y C8: respuesta sobre A14, suma mayor que 100% y cancelación de periodos anteriores | US-07, US-08, US-09 | Usuario |
-| U1 Functional Design | P-1, P-2, P-6, P-10 (P-14 ya no aplica desde C2) | US-02, US-06, US-08, US-12 | Usuario / ARC |
+| U1 Functional Design | ~~D3~~ resuelta el 2026-11-25 con el código de "Solicitados" (RE-21, A15). ~~C6, C7 y C8~~ respondidas el mismo día (C6 = b, C7 = a, C8 = a) | — | — |
+| U1 Functional Design | ~~P-1, P-2, P-6, P-10~~ resueltos el 2026-11-25 con F1, F2, F6 y F13, junto con F3 a F5 y F7 a F12. Siguen abiertas F14 y F15 (la Secretaría de Educación frente a C6 y C7) | US-08 | Usuario |
 | U1 Functional Design (entrega) | D10: lista de parámetros de las reglas para crear en "parametros" (dev y test) | US-15 | OATI / ARC los crean |
 | U1 NFR Requirements | Tiempo de respuesta objetivo para un lote de 1000 estudiantes (RNF-1) | — | Usuario |
 | U1 Infrastructure Design | D7: rutas SSM, destino y retención de logs (mínimo 90 días), tamaño máximo y retención en S3; D11: orígenes de CORS; D12: throttling en WSO2 AM; D13: número de proxies de confianza para la IP (AD-29); requisitos de AD-28 | — | Infraestructura / Seguridad / Arquitectura |

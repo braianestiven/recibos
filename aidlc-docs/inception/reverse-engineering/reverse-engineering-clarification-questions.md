@@ -1,11 +1,11 @@
 # Aclaraciones de Reverse Engineering
 
 - Etapa: INCEPTION → Reverse Engineering (2026-11-25)
-- Estado: C1 a C5 respondidas el 2026-11-25 ("c5 b, c1 a, c2 b..., c3 b, c4 a") y aplicadas a los requisitos, las historias, el diseño y Discovery. C6 a C8 abiertas desde el 2026-11-25
+- Estado: C1 a C5 respondidas el 2026-11-25 ("c5 b, c1 a, c2 b..., c3 b, c4 a") y aplicadas a los requisitos, las historias, el diseño y Discovery. C6 a C8 respondidas el 2026-11-25 ("c6 b, c7 a, porque no supera el 100%, c8 a") y aplicadas
 - Origen: respuestas del usuario a `reverse-engineering-questions.md`. Las demás respuestas ya se aplicaron a los requisitos, las historias y el diseño
 - Mientras C1, C2 y C3 no tengan respuesta, US-07 y US-08 quedan bloqueadas (regla Q3 = b de User Stories). C4 y C5 no bloquean historias
 - C5 se agregó el 2026-11-25, después de leer completo `admin_consultasCoordinador`
-- C6, C7 y C8 se agregaron el 2026-11-25: C6 por la respuesta del usuario a A14; C7 y C8 después de leer completo `admin_solicitudCoordinador` ("Solicitados", RE-23 y RE-26). Mientras no tengan respuesta, US-07 y US-08 suman C6 y C7, y US-09 queda bloqueada por C8
+- C6, C7 y C8 se agregaron el 2026-11-25: C6 por la respuesta del usuario a A14; C7 y C8 después de leer completo `admin_solicitudCoordinador` ("Solicitados", RE-23 y RE-26). Mientras no tenían respuesta, US-07 y US-08 sumaban C6 y C7, y US-09 quedaba bloqueada por C8
 - Puedes responder aquí, después de `[Answer]:`, o en el chat con el formato "c6 a, c7 a, c8 a"
 
 ## Ambigüedad 1: votación automática (RE-01)
@@ -99,7 +99,7 @@ B) No la registra, como se decidió en C1. La respuesta aplica solo a las filas 
 
 C) Other (please describe after [Answer]: tag below)
 
-[Answer]: 
+[Answer]: B. Respuesta del usuario (2026-11-25): "c6 b". La votación automática solo se registra en las filas con un descuento marcado; se mantiene C1
 
 ## Hallazgo RE-23: descuento y votación por encima de 100%
 "Solicitados" calcula la matrícula como valor bruto × (1 − (descuento + votación) / 100), con los porcentajes de la tabla `exencion` y sin tope. Si la suma pasa de 100%, la matrícula queda negativa, y la cuota 1 se inserta igual en Oracle (`ACESTMAT` y `ACREFEST`) con ese valor. El tope de 90% de la votación automática y la regla de pregrado que quitaba la votación marcada con las columnas 8 a 13 lo evitaban. Con C2 y con la respuesta sobre A14, un descuento de 100% más la votación deja la matrícula en −10% del valor bruto.
@@ -115,7 +115,7 @@ C) Registra las dos, como dicen hoy C2 y la respuesta sobre A14. "Solicitados" g
 
 D) Other (please describe after [Answer]: tag below)
 
-[Answer]: 
+[Answer]: A. Respuesta del usuario (2026-11-25): "c7 a, porque no supera el 100%". Si el descuento y la votación pasan de 100%, se registra solo el descuento, en las dos plantillas y para la votación marcada o la automática
 
 ## Hallazgo RE-26: solicitudes sin imprimir de periodos anteriores
 En P-7 se decidió que la cancelación solo toque el periodo vigente; hoy el lote cancela las de todos los periodos. "Solicitados" tiene una búsqueda por estudiante que muestra todas sus solicitudes en estado 0, de cualquier periodo, y al generar usa siempre el periodo vigente. Con P-7, la solicitud vieja de un estudiante que se vuelve a cargar queda junto a la nueva y se puede generar como recibo del periodo actual, con sus exenciones y fechas viejas.
@@ -129,4 +129,4 @@ B) Solo las del periodo vigente, como se decidió en P-7. Las solicitudes viejas
 
 C) Other (please describe after [Answer]: tag below)
 
-[Answer]: 
+[Answer]: A. Respuesta del usuario (2026-11-25): "c8 a". Se cancelan las solicitudes sin imprimir de todos los periodos, como hoy; revierte P-7 y cambia A12

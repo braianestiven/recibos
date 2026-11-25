@@ -3,7 +3,7 @@
 - Created / Last Updated: 2026-11-24T00:00:00Z
 - Project Type: Brownfield (migración / modernización)
 - Product: Migración del módulo de recibos por lote (weboffice)
-- Current Phase: INCEPTION
+- Current Phase: CONSTRUCTION
 - Requirements Depth: Comprehensive (migración de alto riesgo, 15 preguntas abiertas pre-declaradas)
 - Interaction: conversational (desde 2026-11-24, a pedido del usuario: las preguntas se hacen en el chat cuando cada etapa las necesita, y se registran en archivos)
 - Workspace Root: /home/Lazius/Documentos/go/src/github.com/udistrital/recibos (Linux, desde 2026-11-25; antes c:\Users\estiv\OneDrive\Escritorio\recibos)
@@ -11,10 +11,10 @@
 - Rule Details: aws-aidlc-rule-details/ (detectado 2026-11-24 durante Units Generation; antes no estaba en el workspace). Desde 2026-11-25 también está en `.kiro/aws-aidlc-rule-details/`, la primera ruta que busca core-workflow.md; las dos copias son idénticas
 
 ## Current Status
-- **Lifecycle Phase**: INCEPTION
-- **Current Stage**: Units Generation — pendiente de aprobación (se retoma después de Reverse Engineering, aprobada el 2026-11-25)
-- **Next Stage**: CONSTRUCTION — U1 recibos_service, Functional Design
-- **Status**: Reverse Engineering APROBADA el 2026-11-25 (el usuario respondió C1 a C5 y escribió "continuar"). Las aclaraciones se aplicaron: C1 a, C2 b (más de un descuento: la fila no se sube; votación marcada con cualquier descuento; supuesto A14 para el tope de la automática), C3 b (fechas de pregrado desde la plantilla; D1 ampliada), C4 a (versiones actualizadas en todo el proyecto), C5 b (módulo de notas de ARC en la Fase 2). Se vuelve a presentar la aprobación de Units Generation; sin ella no se pasa a Construction. Todo lo que se pregunte o responda al usuario va en español. A pedido del usuario (2026-11-25) se hizo el Boceto visual de Discovery, que estaba omitido: recorrido y 6 pantallas en escritorio y móvil en Product-Definition/visual/, con la guía visual de sga_cliente_admisiones_mf; aprobado el mismo día. Insumo para U2 Functional Design. El mismo día el usuario pidió analizar `admin_solicitudCoordinador` ("Solicitados") y respondió sobre A14: D3 quedó resuelta (A15) y se abrieron C6 (votación automática en filas sin descuento), C7 (descuento más votación por encima de 100%: matrícula negativa en "Solicitados") y C8 (cancelar también las solicitudes sin imprimir de periodos anteriores). No cambian las unidades; Units Generation sigue esperando su aprobación.
+- **Lifecycle Phase**: CONSTRUCTION
+- **Current Stage**: CONSTRUCTION — U1 recibos_service, Functional Design: F1 a F13 respondidas; aclaraciones F14 y F15 abiertas (construction/plans/recibos_service-functional-design-clarification-questions.md)
+- **Next Stage**: U1 recibos_service, NFR Requirements
+- **Status**: Units Generation APROBADA el 2026-11-25T16:45:50Z ("aprobar y continau"). En el mismo mensaje el usuario respondió C6 = b (la votación automática solo en filas con un descuento marcado), C7 = a (si el descuento y la votación pasan de 100%, se registra solo el descuento) y C8 = a (se cancelan las solicitudes sin imprimir de todos los periodos, como hoy; revierte P-7); se aplicaron a requisitos, historias, diseño y Reverse Engineering. Historias: 10 listas y 5 bloqueadas. INCEPTION completa. U1 Functional Design empezó el 2026-11-25T17:03:33Z: el plan tiene 13 preguntas (F1 a F13) y no se generan artefactos hasta que estén respondidas. Todo lo que se pregunte o responda al usuario va en español. El 2026-11-25T17:18:02Z el usuario respondió F1 a F13 ("f1 a, f2 b, f3 a, f4 a, f5 a, f6 a, f7 b, f8 a, f9 c, f10  a, f11 a, f12 b, f13 a"); se aplicaron a requisitos (§12.8 y cambios acordados 13 a 19), historias y diseño. F12 = b (la Secretaría de Educación no cuenta como descuento) abrió F14 y F15; US-08 queda bloqueada por ellas en lugar de D5.
 
 ## Extension Configuration
 | Extension | Enabled | Decided At |
@@ -60,13 +60,18 @@ Reglas cargadas: `extensions/security/baseline/security-baseline.md` y `extensio
   - [x] Actualización por evidencia del código PHP (requirements.md §12, stories.md registro de cambios)
 - [x] Workflow Planning — APROBADO (2026-11-24) → inception/plans/execution-plan.md
 - [x] Application Design — APROBADO (2026-11-24) → inception/application-design/ (AD-01 a AD-22, api-contract.md)
-- [~] Units Generation — EN CURSO (mínima): U1 recibos_service, U2 recibos_mf → inception/plans/unit-of-work-plan.md
+- [x] Units Generation — APROBADA (2026-11-25T16:45:50Z) (mínima): U1 recibos_service, U2 recibos_mf → inception/plans/unit-of-work-plan.md
   - [x] Parte 1 Planificación: Q1 = A (carpetas en la raíz); extensiones: seguridad sí, resiliencia no, PBT parcial
   - [x] Parte 2 Generación: unit-of-work.md, unit-of-work-dependency.md, unit-of-work-story-map.md
-  - [ ] Aprobación del usuario (PENDIENTE; se vuelve a presentar el 2026-11-25 con los cambios de Reverse Engineering)
+  - [x] Aprobación del usuario (2026-11-25T16:45:50Z, "aprobar y continau", junto con C6 b, C7 a y C8 a)
 
 ## Stages (CONSTRUCTION) — según execution-plan.md
-- [ ] U1 recibos_service: Functional Design (completa), NFR Requirements (estándar), NFR Design (estándar), Infrastructure Design (mínima), Code Generation
+- [~] U1 recibos_service — EN CURSO
+  - [~] Functional Design (completa) — plan y preguntas F1 a F13 (2026-11-25T17:03:33Z) → construction/plans/recibos_service-functional-design-plan.md; respuestas recibidas (2026-11-25T17:18:02Z); aclaraciones F14 y F15 abiertas
+  - [ ] NFR Requirements (estándar)
+  - [ ] NFR Design (estándar)
+  - [ ] Infrastructure Design (mínima)
+  - [ ] Code Generation
 - [ ] U2 recibos_mf: Functional Design (mínima), NFR Requirements (mínima), NFR Design (omitida), Infrastructure Design (mínima), Code Generation
 - [ ] Build and Test (ajustada: compilación, pruebas unitarias y CI)
 
@@ -78,18 +83,21 @@ Reglas cargadas: `extensions/security/baseline/security-baseline.md` y `extensio
 - [x] RE-05: más de un periodo vigente → `SIN_PERIODO_VIGENTE` (supuesto A13, RE-18) — 2026-11-25
 - [x] P-12 → b: se registraba el descuento de mayor porcentaje (empates: A9) — 2026-11-24; reemplazada por C2 el 2026-11-25 (más de un descuento: la fila no se sube)
 - [x] P-13 → b: se conservaba la regla actual de la votación — 2026-11-24; cambiada por C2 y C1 el 2026-11-25 (votación marcada con cualquier descuento; automática con tope, A14)
-- [ ] P-1, P-2, P-6, P-10 — U1 Functional Design (P-14 ya no aplica desde C2)
+- [x] P-1, P-2, P-6, P-10 — resueltos con F1, F2, F6 y F13 (2026-11-25)
 - Historias (histórico, 2026-11-24): 10 listas, 5 bloqueadas (US-03 D1, US-05 D2, US-08 D5/D2, US-11 D3/D4, US-15 D6)
-- [ ] D1 (ampliada por C3: columnas y formato de las fechas de pregrado, y si trae la extraordinaria), D2, D5 (acotada) — U1 Functional Design
+- [ ] D1 (archivo de la plantilla de pregrado: A1, encabezados y posición de la fecha ordinaria; F8 fijó la estructura) y D2 (archivo SMLV) — ARC
+- [ ] D5 — el DBA identifica la tabla de festivos de weboffice (F9; F10: los fines de semana no mueven la fecha); dependencia técnica, no bloquea historias
 - [x] D3: resuelta el 2026-11-25 con el código de "Solicitados" (RE-21, supuesto A15)
-- [ ] C6, C7, C8 (respuesta del usuario sobre A14; hallazgos RE-23 y RE-26) — preguntadas el 2026-11-25
+- [x] C6 = b, C7 = a, C8 = a — respondidas y aplicadas el 2026-11-25
+- [x] F1 a F13 — respondidas el 2026-11-25: f1 a, f2 b, f3 a, f4 a, f5 a, f6 a, f7 b, f8 a, f9 c, f10  a, f11 a, f12 b, f13 a
+- [ ] F14 y F15 (la Secretaría de Educación frente a C6 y C7) — preguntadas el 2026-11-25
 - [ ] D7 — U1 Infrastructure Design
 - [ ] D4 (ampliada: prefijo y llaves), D8 (rol ARC) — U1 Code Generation
 - [~] D6 acotada: consulta y formato del sobre conocidos; falta el campo del valor de cada regla, ids por ambiente, URL y autenticación — preguntado 2026-11-24
 - [x] P-15 → a: todas las reglas de "parametros" — 2026-11-24
 - [ ] D10 crear los parámetros de las reglas en "parametros" (OATI/ARC) — la lista sale en U1 Functional Design
 - [ ] D9 (token del core en oas_cliente) — U2 Functional Design
-- Historias (actual, 2026-11-25): 9 listas, 6 bloqueadas (US-03 D1, US-05 D2, US-07 D1/C6/C7, US-08 D5/D2/C6/C7, US-09 C8, US-11 D4)
+- Historias (actual, 2026-11-25): 10 listas, 5 bloqueadas (US-03 D1, US-05 D2, US-07 D1, US-08 F14/F15 y D2 en la variante SMLV, US-11 D4)
 
 ## Scope boundary (fuente de verdad)
 - Límite de alcance = lista "Funcionalidades IN" de vision-document.md.

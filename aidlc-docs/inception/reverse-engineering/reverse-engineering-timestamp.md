@@ -23,4 +23,4 @@ Detalle de los archivos analizados:
 - [x] code-quality-assessment.md
 - [x] story-code-traceability.md (adicional: historias y casos de uso frente al código, hallazgos RE-01 a RE-26)
 - [x] reverse-engineering-questions.md (adicional: 4 preguntas sobre los hallazgos; respondidas el 2026-11-25)
-- [x] reverse-engineering-clarification-questions.md (adicional: aclaraciones C1 a C8, 2026-11-25; C6 a C8 abiertas)
+- [x] reverse-engineering-clarification-questions.md (adicional: aclaraciones C1 a C8, respondidas el 2026-11-25)

@@ -52,8 +52,8 @@ sequenceDiagram
     UC->>MY: INSERT en solicitudLote
     UC->>UC: formato y filas en el dominio
     UC->>ORA: estudiantes, proyectos y certificados en bloque
-    loop cada estudiante con periodo vigente conocido
-        UC->>MY: cancela las sin imprimir del periodo en su propia transacción
+    loop cada estudiante conocido
+        UC->>MY: cancela sus sin imprimir en su propia transacción
         opt estudiante válido
             UC->>MY: transacción con la solicitud nueva
         end

@@ -6,7 +6,7 @@
 - Fecha: 2026-11-24
 - Inputs: `Product-Definition/vision-document.md`, `Product-Definition/technical-environment.md`, `Product-Definition/open-questions.md`
 - Soporte: `Product-Definition/interview/technical/existing-system-analysis.md`, `.../templates-analysis.md`
-- Estado: **aprobado 2026-11-24**. Actualizado el mismo día con las decisiones de User Stories (P-3, P-5, P-7, P-11) y con evidencia del código PHP actual (ver §12). Actualizado el 2026-11-25 con las decisiones de Reverse Engineering (§12.6 y §12.7) y con el análisis de "Solicitados" (D3 resuelta, A15; C6 a C8 abiertas)
+- Estado: **aprobado 2026-11-24**. Actualizado el mismo día con las decisiones de User Stories (P-3, P-5, P-7, P-11) y con evidencia del código PHP actual (ver §12). Actualizado el 2026-11-25 con las decisiones de Reverse Engineering (§12.6 y §12.7) y con el análisis de "Solicitados" (D3 resuelta, A15; C6 = b, C7 = a y C8 = a, respondidas el mismo día), y con las respuestas F1 a F13 del diseño funcional de U1 (§12.8)
 
 > Límite de alcance (regla dura): solo la lista **"Funcionalidades IN"** de la Visión. Las
 > listas allow/deny del Entorno técnico son **restricciones**, no sugerencias. Nada fuera de
@@ -85,6 +85,8 @@ encabezados antes de procesar filas.
 - CA2: posgrado créditos = **tipo 2**, A1 `PLANTILLA GENERAL POSTGRADOS CREDITOS`, datos desde fila 5, **29 columnas**.
 - CA3: posgrado SMLV = **tipo 3**, A1 `PLANTILLA GENERAL POSTGRADOS SALARIOS MINIMOS LEGALES`, datos desde fila 5; estructura por confirmar (OQ-B-2, dependencia bloqueante).
 - CA4: si A1 no coincide o el número/orden de columnas no corresponde, se rechaza todo el lote con un motivo claro (no se procesa parcialmente el formato).
+- CA5: un lote con más de **1000 filas con datos** se rechaza completo, sin procesar ninguna fila (422); el mensaje dice el máximo y cuántas filas trae, y el lote queda registrado (RF-12 CA2). Decisión F1 (P-1, 2026-11-25); hoy no hay máximo.
+- CA6: una fila con datos y sin código aparece como no subida con `CODIGO_INVALIDO` ("Falta el código del estudiante"); las filas vacías se omiten, y una celda con solo espacios cuenta como vacía (decisiones F3 y F4, 2026-11-25). Hoy toda fila sin código se omite sin aviso.
 - Origen: IN-1; templates-analysis.md; C-3.
 
 ### RF-03 — Validación académica del estudiante (Oracle, solo lectura)
@@ -94,7 +96,9 @@ Por cada código de estudiante del lote, el sistema valida contra Oracle académ
 - CA3: si el evento de **terminación de materias** (hoy 82) está activo para el proyecto curricular del estudiante (`fua_verifica_evento`), solo se aceptan los estados `T` o `H`. Como `H` no está en la lista de estados permitidos, hoy se rechaza antes por CA1; se conserva ese orden.
 - CA4: Oracle se usa **solo lectura**; no se modifica estructura ni datos.
 - CA5: si el estudiante existe pero no tiene valor de matrícula en `V_ACESTMATBRUTO`, se rechaza con el motivo "Sin información de matrícula".
-- CA6: las validaciones se aplican en el orden del sistema actual (existencia, información de matrícula, estado, proyecto curricular, terminación de materias); el motivo de rechazo es el de la primera que falla.
+- CA6: las validaciones se aplican en el orden del sistema actual (existencia, información de matrícula, estado, proyecto curricular, terminación de materias); el motivo de rechazo es el de la primera que falla. Las validaciones nuevas van después, en este orden: periodo vigente (RE-05) y nivel del estudiante frente a la plantilla (CA7).
+- CA7: el nivel del proyecto curricular del estudiante debe corresponder a la plantilla: la de pregrado solo acepta proyectos de nivel pregrado, y las de posgrado solo los demás niveles. El nivel sale de Oracle (`ACCRA.cra_tip_cra` → `ACTIPCRA.tra_nivel`), la misma relación que usa "Solicitados". Si no corresponde, la fila no se sube con `NIVEL_NO_CORRESPONDE` (decisión F5, 2026-11-25). Hoy no se revisa, y "Solicitados" calcula un valor que no corresponde, o 0 (RE-22).
+- CA8: si un código aparece más de una vez en el lote, solo se procesa su primera aparición. Las siguientes no se procesan y aparecen como no subidas con `CODIGO_REPETIDO` ("El código ya está en la fila N"). Como no se procesan, no cancelan solicitudes: si cancelaran, borrarían la que acaba de crear la primera aparición (decisión F2, P-2, 2026-11-25). Hoy queda la solicitud de la última aparición.
 - Origen: IN-2; existing-system-analysis.md §3; `funcion.class.php` (`verificarCodigo`, `procesarRegistro`); deny de escritura en Oracle.
 
 ### RF-04 — Generación de solicitud de recibo
@@ -105,17 +109,21 @@ conceptos, equivalente al sistema actual salvo las reglas acordadas (§4.A).
 - Origen: IN-3; métricas de éxito.
 
 ### RF-05 — Reglas de cuotas (con cambios acordados)
-- CA1: **Pregrado** — una sola cuota al **100%**. Las fechas de pago vienen de la plantilla, como en posgrado (C3, 2026-11-25); ya no salen de las fechas de la facultad. `[PENDIENTE D1]`: columnas de fecha y si la plantilla trae la fecha extraordinaria o se calcula como en posgrado (CA3). La columna de terminación de materias ya no cambia las fechas: solo registra su exención. Si faltan las fechas o son inválidas, la fila no se sube y aparece en el resumen con el motivo (RE-06). **Se elimina** el diferido (3 cuotas al 0% "COVID"). **No** se lee "Seguro Estudiantil" como número de cuota.
+- CA1: **Pregrado** — una sola cuota al **100%**. Las fechas de pago vienen de la plantilla, como en posgrado (C3, 2026-11-25); ya no salen de las fechas de la facultad. La plantilla trae solo la **fecha ordinaria**, en tres columnas (día, mes y año), y la extraordinaria se calcula como en posgrado (CA3) (decisión F8, 2026-11-25); la posición de las columnas sale del archivo oficial (D1). La columna de terminación de materias ya no cambia las fechas: solo registra su exención. Si faltan las fechas o son inválidas, la fila no se sube y aparece en el resumen con el motivo (RE-06). **Se elimina** el diferido (3 cuotas al 0% "COVID"). **No** se lee "Seguro Estudiantil" como número de cuota.
 - CA2: **Posgrado (créditos y SMLV)** — el número de cuotas es obligatorio y va de 1 a 3. Si la celda está vacía o tiene otro valor, la fila no se sube y aparece en el resumen con el motivo (RE-03 y RE-04; hoy la celda vacía genera 1 cuota y un 0 o un texto guardan la solicitud sin cuotas). Cada cuota debe traer una fecha válida en la plantilla; si falta, la fila no se sube (RE-06). Un porcentaje vacío toma el valor por defecto de su posición (**100 / 60-40 / 40-30-30**), como hoy. La suma de los porcentajes debe ser **100**; si no, se rechaza el estudiante (decisión P-5, cambio frente al sistema actual).
-- CA3: **Posgrado** — fecha extraordinaria = fecha ordinaria **+ 8 días calendario**; si ese día es festivo, se avanza un día a la vez hasta el primero que no lo sea (código actual, `guardarCuotas`). Origen de los festivos: D5.
+- CA3: **Pregrado y posgrado** — fecha extraordinaria = fecha ordinaria **+ 8 días calendario**; si ese día es festivo, se avanza un día a la vez hasta el primero que no lo sea (código actual, `guardarCuotas`; en pregrado desde F8). Los festivos son los de la tabla que usa hoy weboffice (decisión F9, 2026-11-25; el DBA la identifica, D5). Solo mueven la fecha los días que están en esa tabla: un sábado o un domingo que no esté en ella es una fecha válida (decisión F10).
+- CA4: **Fechas** (decisión F7, 2026-11-25): ninguna fecha ordinaria puede ser anterior al día de la carga (America/Bogota), y en posgrado cada cuota debe vencer después de la anterior. Si no se cumple, la fila no se sube con `FECHA_INVALIDA`, y el detalle dice la cuota. Hoy no se revisa.
+- CA5: **Créditos o SMLV** (columna 2 de posgrado; decisión F6, P-6): obligatorio y mayor que 0; en créditos, un número entero; en SMLV, un número con hasta dos decimales. Si no cumple, la fila no se sube con `UNIDAD_INVALIDA`. Si el DDL (D4) muestra que `unidad` solo guarda enteros, SMLV también se limita a enteros. Hoy no se valida, y con 0 o vacío "Solicitados" genera el recibo en 0 (RE-22).
+- CA6: los porcentajes de las cuotas de posgrado son números enteros de 0 a 100; un decimal se rechaza con `PORCENTAJE_INVALIDO` (decisión de diseño de U1 Functional Design, 2026-11-25). Hoy se acepta cualquier número de hasta 100.
 - Origen: IN-3; "Reglas acordadas"; "Reglas de cálculo vigentes".
 
 ### RF-06 — Exenciones
 - CA1: se aplica el mapa **columna → id_exención** por tipo de plantilla (parametrizado, RF-09; hoy fijo en código).
 - CA2: pregrado **excluye "Reingreso"** (C-045558, `id_exencion 18`); la columna no existe en la plantilla de 13.
-- CA3: **Votación** (10%, `id_exencion 1`): es la única exención acumulable y se registra **una sola vez**, venga de la columna de la plantilla, de `ACCERELECTORAL` (certificado activo) o de ambas (decisión P-3). Reglas desde el 2026-11-25 (C2 y C1 cambian P-13): (a) la votación marcada se registra siempre, sola o con un descuento, en las dos plantillas; en pregrado ya no se omite con los descuentos de las columnas 8 a 13 (cambio frente al sistema actual); (b) si la votación no está marcada, se consulta `ACCERELECTORAL` solo si la fila tiene un descuento marcado y su porcentaje es ≤ 90% (supuesto A14); una fila sin ninguna exención marcada no recibe la votación automática, como hoy (C1); (c) el total puede pasar de 100%, como pasa hoy en posgrado. *En revisión desde el 2026-11-25:* sobre A14 el usuario respondió "si no esta marcado en el archivo y si lo encuentras en la tabla ACCERELECTORAL aplica el descuento", y "Solicitados" deja la matrícula negativa cuando la suma pasa de 100% (RE-23). La regla cambia cuando se respondan C6 (filas sin descuento) y C7 (suma mayor que 100%).
-- CA4: **Los descuentos no son acumulables** (decisión P-3): una solicitud lleva como máximo dos exenciones, la votación y un descuento (C2, 2026-11-25). Si la fila trae más de un descuento marcado, sin contar la votación, la fila **no se sube** y aparece en el resumen con el motivo `DESCUENTOS_NO_ACUMULABLES`. Reemplaza a P-12 (registrar el de mayor porcentaje) y al supuesto A9. Es un cambio frente al sistema actual, que registra todas las exenciones marcadas.
-- CA5: una columna de concepto o de exención está **marcada** si su celda tiene cualquier contenido, como hoy (`isset` en `conceptoPlantilla` y `exencionPlantilla`).
+- CA3: **Votación** (10%, `id_exencion 1`): es la única exención acumulable y se registra **una sola vez**, venga de la columna de la plantilla, de `ACCERELECTORAL` (certificado activo) o de ambas (decisión P-3). Reglas desde el 2026-11-25 (C1, C2, C6 y C7; cambian P-13): (a) la votación marcada se registra sola o con un descuento, en las dos plantillas; (b) si la votación no está marcada y la fila tiene un descuento marcado, se registra la votación cuando el estudiante tiene certificado activo en `ACCERELECTORAL` (respuesta del usuario sobre A14: "si no esta marcado en el archivo y si lo encuentras en la tabla ACCERELECTORAL aplica el descuento"); una fila sin ningún descuento marcado no recibe la votación automática, como hoy (C1, C6 = b); (c) **el descuento y la votación juntos no pasan de 100%**: si pasarían, se registra solo el descuento, en las dos plantillas y para la votación marcada o la automática (C7 = a), porque "Solicitados" dejaría la matrícula negativa (RE-23). Con la votación en 10%, la regla (c) da para la votación automática el mismo resultado que el tope actual de 90%. Para la votación marcada cambian dos casos frente a hoy: en pregrado, con un descuento de las columnas 8 a 13, hoy se quita siempre y ahora solo si la suma pasa de 100%; en posgrado hoy se registra siempre y ahora se quita si la suma pasa de 100%.
+- CA4: **Los descuentos no son acumulables** (decisión P-3): una solicitud lleva como máximo dos exenciones, la votación y un descuento (C2, 2026-11-25). Si la fila trae más de un descuento marcado, sin contar la votación, la fila **no se sube** y aparece en el resumen con el motivo `DESCUENTOS_NO_ACUMULABLES`. Reemplaza a P-12 (registrar el de mayor porcentaje) y al supuesto A9. Es un cambio frente al sistema actual, que registra todas las exenciones marcadas. **La Secretaría de Educación** (posgrado, columna 16, `id_exencion 16`) no cuenta como descuento para esta regla: una fila puede llevar la votación, un descuento y la Secretaría, como lo calcula hoy "Solicitados", que la aplica aparte, sobre el valor que queda (decisión F12, 2026-11-25). Las exenciones se guardan en este orden: votación, descuento y al final la Secretaría, porque "Solicitados" solo cuenta las dos primeras filas para la votación y el descuento (RE-24). Cómo entra la Secretaría en la suma de C7 y en la votación automática: aclaraciones F14 y F15, pendientes.
+- CA5: una columna de concepto o de exención está **marcada** si su celda tiene contenido distinto de espacios. Una celda con solo espacios no cuenta (decisión F4, 2026-11-25); hoy cuenta cualquier contenido (`isset` en `conceptoPlantilla` y `exencionPlantilla`).
+- CA6: el porcentaje de cada exención se lee de la tabla MySQL `exencion`, en solo lectura: son los mismos con los que cobra "Solicitados" (decisión F11, 2026-11-25). Revierte P-15 en este punto, y es como lo hace hoy el lote PHP. Si una exención del mapa no tiene porcentaje en la tabla, el lote no se procesa y el mensaje la nombra, como con una regla que falta (AD-22); hoy se omite sin aviso (RE-12).
 - Origen: IN-3; templates-analysis.md; "Reglas acordadas".
 
 ### RF-07 — Conceptos
@@ -125,21 +133,22 @@ conceptos, equivalente al sistema actual salvo las reglas acordadas (§4.A).
 
 ### RF-08 — Cancelación de solicitudes previas sin imprimir
 Por cada estudiante del lote, **procesado o rechazado**, se cancelan sus solicitudes anteriores
-**sin imprimir** (estado `0 → 2`) del periodo vigente. Si el estudiante es válido, la cancelación va
+**sin imprimir** (estado `0 → 2`) de cualquier periodo, como hoy (C8). Si el estudiante es válido, la cancelación va
 antes de insertar la solicitud nueva.
 - CA1: solo afecta solicitudes del mismo estudiante en estado "sin imprimir".
 - CA2: la cancelación va en su **propia transacción**. Si después falla el guardado de la solicitud nueva (RF-10), la cancelación se mantiene. Si la cancelación falla, no se inserta la solicitud nueva y la fila queda rechazada por error al guardar. *Cambiado el 2026-11-25 (RE-02): antes, la cancelación y la inserción iban en la misma transacción.*
 - CA3: las pruebas en paralelo se ejecutan contra una **base de datos de pruebas dedicada** (copia con datos de periodos anteriores), de modo que la cancelación de solicitudes previas **nunca sobrescribe ni cancela** solicitudes creadas por el sistema PHP en producción (OQ-B-5 resuelta).
-- CA4: solo se cancelan las solicitudes sin imprimir del **periodo vigente**, es decir, el año y periodo de la nueva solicitud (decisión P-7). Es un cambio frente al sistema actual, cuya consulta `cancelarSolicitud` cancela las de todos los periodos. *En revisión desde el 2026-11-25 (C8, RE-26):* la búsqueda por estudiante de "Solicitados" muestra las solicitudes sin imprimir de cualquier periodo y las genera en el periodo vigente.
-- CA5: un estudiante **rechazado por cualquier motivo** también pierde sus solicitudes sin imprimir del periodo vigente (decisión del usuario, RE-02). Hoy el PHP ya lo hace con los rechazados por terminación de materias, por fechas de posgrado o por error al guardar, pero no con los rechazados por estado, valor de matrícula o proyecto curricular.
-- CA6: la cancelación necesita el estudiante y su periodo vigente. Por eso no aplica cuando la fila se rechaza por código inválido, estudiante no encontrado o proyecto curricular sin periodo vigente, ni cuando se rechaza el lote completo (formato, reglas de "parametros", máximo de filas) (supuesto A12).
+- CA4: se cancelan las solicitudes sin imprimir del estudiante **de todos los periodos**, como hace hoy la consulta `cancelarSolicitud` (C8 = a, 2026-11-25). *Antes (P-7, 2026-11-24): solo las del periodo vigente. Se revirtió porque la búsqueda por estudiante de "Solicitados" muestra las solicitudes sin imprimir de cualquier periodo y las genera en el periodo vigente (RE-26).*
+- CA5: un estudiante **rechazado por cualquier motivo** también pierde sus solicitudes sin imprimir, de cualquier periodo (decisión del usuario, RE-02; C8). Hoy el PHP ya lo hace con los rechazados por terminación de materias, por fechas de posgrado o por error al guardar, pero no con los rechazados por estado, valor de matrícula o proyecto curricular.
+- CA6: la cancelación necesita saber quién es el estudiante: su código es válido y está en Oracle. Por eso no aplica cuando la fila se rechaza por código inválido o estudiante no encontrado, ni cuando se rechaza el lote completo (formato, reglas de "parametros", máximo de filas) (supuesto A12). Desde C8 (2026-11-25) sí aplica al estudiante cuyo proyecto curricular no tiene periodo vigente, porque la cancelación ya no necesita el periodo.
 - Origen: IN-4.
 
 ### RF-09 — Reglas parametrizadas vía servicio externo "parametros"
 Las reglas que hoy están fijas en el código se **consultan** (solo lectura, decisión P-11) en el servicio externo
 REST síncrono "parametros": conceptos, exenciones, porcentajes por defecto, estados permitidos,
 eventos de calendario, plazo de la fecha extraordinaria y mapa columna → exención. Las fechas de
-pago por facultad ya no se usan: desde el 2026-11-25 las fechas vienen de la plantilla (C3).
+pago por facultad ya no se usan: desde el 2026-11-25 las fechas vienen de la plantilla (C3). Tampoco salen de
+"parametros" los porcentajes de las exenciones, que se leen de la tabla `exencion` (RF-06 CA6, F11), ni los festivos, que se leen de la tabla de weboffice (RF-05 CA3, F9).
 - CA1: **ningún** ID de concepto/exención/evento/estado ni porcentaje queda fijo en el código (deny: reglas activadas comentando código).
 - CA2: el acceso se modela como un **puerto** en `app/application/` con un **adaptador** en `app/infrastructure/`. Contrato conocido (usuario, 2026-11-24): cada parámetro se consulta por su id con `GET /v1/parametro/{id}` (por ejemplo `/v1/parametro/9`). La respuesta usa el sobre CRUD (`Status` como texto, `"200"`) y `Data` es un objeto `Parametro` (`Id`, `Nombre`, `Descripcion`, `CodigoAbreviacion`, `Activo`, `NumeroOrden`, `TipoParametroId`, `ParametroPadreId`) sin un campo de valor. Falta definir en qué campo va el valor de cada regla, el id de cada regla por ambiente, la URL y la autenticación (D6, acotada).
 - CA3: Meta de negocio: **cero cambios de código por periodo**.
@@ -161,6 +170,7 @@ rechazados con el **motivo** de cada rechazo.
 - CA1: cada rechazo indica el código del estudiante y la causa (estado inválido, no encontrado, formato de fila, etc.).
 - CA2: el resumen es consistente con lo efectivamente escrito en MySQL.
 - CA3: el resumen lista los estudiantes que se subieron (fila y código) y los que no se subieron (fila, código y motivo), como pidió el usuario el 2026-11-25 ("los que no se subieron y el porqué y los que sí se subieron"). El PHP actual también lista los códigos procesados.
+- CA4: la lista no se exporta en el MVP; el resumen se ve en pantalla (decisión F13, P-10, 2026-11-25).
 - Origen: IN-7.
 
 ### RF-12 — Historial de lotes
@@ -201,13 +211,14 @@ formatos que **"Solicitados" lee sin cambios**.
 
 ### 4.A — Reglas de cálculo (referencia de equivalencia)
 Resumen consolidado (fuente de verdad para las pruebas unitarias de `app/domain/`, cobertura 100%):
-1. Pregrado: 1 cuota 100%; las fechas de pago vienen de la plantilla (C3; columnas y fecha extraordinaria en D1); si faltan o son inválidas, la fila no se sube (RE-06); sin diferido; sin "Seguro" como cuota (`solicitudRecibo.cuota` = 1, A15); sin "Reingreso".
-2. Posgrado: número de cuotas obligatorio, de 1 a 3 (RE-03, RE-04), cada una con fecha válida en la plantilla (si falta, la fila no se sube, RE-06); un % vacío toma el valor por defecto de su posición (100 / 60-40 / 40-30-30); la suma debe ser 100.
-3. Posgrado: extraordinaria = ordinaria + 8 días calendario; si cae en festivo, se avanza al siguiente día no festivo (origen de los festivos: D5). *Corrige la primera versión de este documento, que decía "8 días hábiles".*
-4. Exenciones: como máximo un descuento más la votación; la fila con más de un descuento marcado no se sube (C2). La votación se registra una sola vez: la marcada siempre, con o sin descuento; la automática solo si la fila tiene un descuento marcado de 90% o menos (C1, A14). Una columna está marcada si su celda tiene contenido.
+1. Pregrado: 1 cuota 100%; la fecha ordinaria viene de la plantilla (C3, F8; posición de las columnas en D1) y la extraordinaria se calcula como en el punto 3; si faltan o son inválidas, la fila no se sube (RE-06); sin diferido; sin "Seguro" como cuota (`solicitudRecibo.cuota` = 1, A15); sin "Reingreso".
+2. Posgrado: número de cuotas obligatorio, de 1 a 3 (RE-03, RE-04), cada una con fecha válida en la plantilla (si falta, la fila no se sube, RE-06); un % vacío toma el valor por defecto de su posición (100 / 60-40 / 40-30-30); los porcentajes son enteros y la suma debe ser 100; la columna 2 (créditos o SMLV) es obligatoria y mayor que 0 (F6); ninguna fecha ordinaria es anterior al día de la carga y cada cuota vence después de la anterior (F7).
+3. Pregrado y posgrado: extraordinaria = ordinaria + 8 días calendario; si cae en festivo, se avanza al siguiente día no festivo. Festivos: los de la tabla que usa hoy weboffice (F9; el DBA la identifica, D5); un sábado o un domingo que no esté en ella no mueve la fecha (F10). *Corrige la primera versión de este documento, que decía "8 días hábiles".*
+4. Exenciones: como máximo un descuento más la votación; la fila con más de un descuento marcado no se sube (C2). La votación se registra una sola vez: la marcada, sola o con un descuento; la automática (`ACCERELECTORAL`), solo si la fila tiene un descuento marcado (C1, C6, A14). El descuento y la votación juntos no pasan de 100%: si pasarían, se registra solo el descuento (C7). Una columna está marcada si su celda tiene contenido distinto de espacios (F4). La Secretaría de Educación no cuenta como descuento para C2 (F12; F14 y F15 aclaran su lugar en C6 y C7). Los porcentajes de las exenciones salen de la tabla `exencion` (F11).
 5. Conceptos: 1 siempre; 19 solo pregrado; 2/3/4 según plantilla.
-6. Periodo de la solicitud: año y periodo vigentes del proyecto curricular (evento 80). Si el proyecto no tiene periodo vigente, o la consulta devuelve más de uno (A13), la fila no se sube y el mensaje pide reportarlo al área de sistemas (RE-05). La cancelación de solicitudes previas se limita a ese periodo (P-7) y aplica también a los estudiantes rechazados (RE-02).
-7. Todos los IDs/porcentajes/eventos/estados provienen de "parametros" (RF-09), en solo lectura.
+6. Periodo de la solicitud: año y periodo vigentes del proyecto curricular (evento 80). Si el proyecto no tiene periodo vigente, o la consulta devuelve más de uno (A13), la fila no se sube y el mensaje pide reportarlo al área de sistemas (RE-05). La cancelación de las solicitudes previas sin imprimir abarca todos los periodos, como hoy (C8, que revierte P-7), y aplica también a los estudiantes rechazados (RE-02).
+7. Los IDs, eventos, estados, mapas y porcentajes por defecto de las cuotas provienen de "parametros" (RF-09), en solo lectura. Los porcentajes de las exenciones salen de la tabla `exencion` (F11) y los festivos, de la tabla de weboffice (F9).
+8. Validaciones nuevas del diseño funcional de U1: un lote de más de 1000 filas con datos se rechaza completo (F1); una fila con datos y sin código es `CODIGO_INVALIDO` (F3); un código repetido se procesa solo en su primera aparición, y las demás son `CODIGO_REPETIDO`, sin cancelar nada (F2); un estudiante de un nivel distinto al de la plantilla es `NIVEL_NO_CORRESPONDE` (F5).
 
 ---
 
@@ -396,14 +407,14 @@ Estas resoluciones dejan el **requisito** definido pero necesitan un artefacto e
 
 | # | Artefacto requerido | Responsable | Bloquea |
 |---|---------------------|-------------|---------|
-| D1 | Plantilla oficial de pregrado sin "Reingreso" y con las fechas de pago (OQ-B-3, C3): columnas, formato de las fechas y si trae la fecha extraordinaria | ARC | Validación del formato tipo 1 y fechas de pregrado (US-03, US-07) |
+| D1 | Archivo oficial de la plantilla de pregrado sin "Reingreso" y con la fecha de pago (OQ-B-3, C3): texto de A1, encabezados y posición de las tres columnas de la fecha ordinaria; F8 fijó que la extraordinaria se calcula | ARC | Validación del formato tipo 1 y fechas de pregrado (US-03, US-07) |
 | D2 | Plantilla oficial posgrado SMLV (OQ-B-2) | ARC | Validación formato tipo 3 |
 | D3 | ~~Valor de `solicitudRecibo.cuota` en pregrado y demás estados que lee "Solicitados"~~ **Resuelta el 2026-11-25** con el código de "Solicitados" (RE-21, A15) | — | Ya no bloquea |
 | D4 | DDL real `solicitud*`/`exencion` + modelo aprobado (OQ-T-9); `fechaPagoFacultad` ya no se usa (C3) | DBA | Adaptadores MySQL |
-| D5 | Origen de los festivos y si sábados y domingos cuentan (OQ-T-8, acotada) | DBA / OATI | RF-05 CA3 |
+| D5 | Tabla de festivos que usa hoy weboffice: base, nombre y columnas (F9). Los sábados y domingos no mueven la fecha (F10) | DBA | Adaptador de festivos (RF-05 CA3). Dependencia técnica: ya no bloquea historias |
 | D6 | Campo y formato del valor de cada regla dentro del objeto `Parametro`, id de cada regla por ambiente, URL y autenticación (OQ-T-11, acotada; el formato del sobre ya se conoce) | Usuario / OATI | Adaptador "parametros" (RF-09) |
 | D7 | Rutas SSM finales y `{parameterStore}` (OQ-T-7), destino/retención logs (OQ-T-5), límites/retención S3 (OQ-T-10) | Infraestructura / Seguridad | Infraestructura y config |
-| D10 | Crear en "parametros" (dev y test) los parámetros de las reglas, que hoy están en el código PHP y en la tabla `exencion` (las fechas por facultad ya no se usan, C3) | OATI / ARC | Procesar lotes en test |
+| D10 | Crear en "parametros" (dev y test) los parámetros de las reglas que hoy están en el código PHP. Los porcentajes de las exenciones siguen en la tabla `exencion` (F11) y las fechas por facultad ya no se usan (C3). La lista sale en U1 Functional Design | OATI / ARC | Procesar lotes en test |
 | D11 | Origen (URL) desde el que el root institucional carga `recibos_mf` en cada ambiente, para la lista de CORS | Arquitectura / infraestructura | U1 Infrastructure Design |
 | D12 | Política de limitación de tráfico (throttling) de la API en WSO2 AM | Arquitectura | U1 Infrastructure Design |
 | D13 | Número de proxies de confianza delante de `recibos_service` que agregan `X-Forwarded-For` (WSO2 AM, balanceador u otros), para tomar la IP correcta (RF-12 CA4, RE-13) | Infraestructura / Arquitectura | U1 Infrastructure Design |
@@ -423,9 +434,9 @@ Estas resoluciones dejan el **requisito** definido pero necesitan un artefacto e
 - A9: **ya no aplica** (C2, 2026-11-25): una fila con más de un descuento ya no se procesa, así que no hay empate que resolver. Antes: si dos descuentos marcados tenían el mismo porcentaje, se registraba el de la columna que aparece primero (P-12).
 - A10: las fechas de las cuotas se guardan como timestamp Unix de la medianoche en America/Bogota, como hoy (AD-15).
 - A11: la llamada a "parametros" reenvía el token del usuario, como `utils_oas/request` (AD-20).
-- A12: la cancelación de las solicitudes de un estudiante rechazado (RE-02) solo es posible si se conocen el estudiante y su periodo vigente, porque P-7 la limita a ese periodo. No se cancela nada cuando la fila se rechaza por código inválido, estudiante no encontrado o proyecto curricular sin periodo vigente, ni cuando se rechaza el lote completo.
+- A12: la cancelación de las solicitudes de un estudiante rechazado (RE-02) solo es posible si se sabe quién es: su código es válido y está en Oracle. No se cancela nada cuando la fila se rechaza por código inválido o estudiante no encontrado, ni cuando se rechaza el lote completo. *Cambiado el 2026-11-25 por C8: antes también hacía falta el periodo vigente, porque P-7 limitaba la cancelación a ese periodo; ahora el estudiante cuyo proyecto no tiene periodo vigente también cancela.*
 - A13: si la consulta del periodo vigente devuelve más de un periodo para el proyecto curricular, la fila no se sube con `SIN_PERIODO_VIGENTE`, como en RE-05. El módulo de notas de ARC muestra que hay un periodo por estado ('A', 'X', 'P'), así que más de uno indica una base inconsistente (RE-18).
-- A14: la votación automática conserva el tope actual: solo se agrega si el descuento marcado es de 90% o menos (P-13). C2 cambió la votación marcada, no la automática. *Respondido por el usuario el 2026-11-25:* "si no esta marcado en el archivo y si lo encuentras en la tabla ACCERELECTORAL aplica el descuento". Sigue vigente hasta que se respondan C6 y C7, porque la respuesta cambia C1 y, sin tope, un descuento de 100% más la votación deja la matrícula negativa en "Solicitados" (RE-23).
+- A14: **resuelto el 2026-11-25** con la respuesta del usuario ("si no esta marcado en el archivo y si lo encuentras en la tabla ACCERELECTORAL aplica el descuento"), C6 = b y C7 = a: si la votación no está marcada y la fila tiene un descuento marcado, se registra la votación cuando el estudiante tiene certificado activo en `ACCERELECTORAL`, siempre que el descuento y la votación juntos no pasen de 100%. Con la votación en 10% equivale al tope actual de 90%, así que la votación automática da el mismo resultado que hoy. *Antes: la votación automática conservaba el tope de 90% (P-13).*
 - A15: `solicitudRecibo.cuota` vale 1 en pregrado (la única cuota) y el número de cuotas de la plantilla en posgrado. "Solicitados" solo muestra ese campo en posgrado y genera un recibo por cada fila de `solicitudCuota` (RE-21). Si el DBA sabe de otro módulo que lo lea (por ejemplo `admin_generados` o `borrar_registro`, que no están en el workspace), se revisa.
 
 ---
@@ -461,11 +472,11 @@ Origen: respuestas del usuario a los puntos por confirmar de User Stories y lect
 |---|---|---|
 | P-3 | Los descuentos no son acumulables; la votación es la única exención acumulable y se registra una sola vez | RF-06 CA3, CA4 |
 | P-5 | Los porcentajes de las cuotas de posgrado deben sumar 100 | RF-05 CA2 |
-| P-7 | La cancelación de solicitudes sin imprimir aplica solo al periodo vigente | RF-08 CA4 |
+| P-7 | La cancelación de solicitudes sin imprimir aplica solo al periodo vigente. *Revertida el 2026-11-25 por C8: abarca todos los periodos, como hoy* | RF-08 CA4 |
 | P-11 | `recibos_service` solo consulta el servicio "parametros" | RF-09, CA4 |
 | P-12 | Si hay varios descuentos marcados, se registra solo el de mayor porcentaje. *Reemplazada el 2026-11-25 por C2: la fila con más de un descuento no se sube* | RF-06 CA4 |
-| P-13 | Para la votación se conserva exactamente la regla actual, incluida la diferencia entre pregrado y posgrado. *Cambiada el 2026-11-25 por C2 y C1: la votación marcada se registra con cualquier descuento; la automática conserva el tope (A14)* | RF-06 CA3 |
-| P-15 | Todas las reglas se leen de "parametros", incluidos los porcentajes de las exenciones y las fechas por facultad. *Desde el 2026-11-25 las fechas vienen de la plantilla (C3); las fechas por facultad ya no se usan* | RF-09 |
+| P-13 | Para la votación se conserva exactamente la regla actual, incluida la diferencia entre pregrado y posgrado. *Cambiada el 2026-11-25 por C1, C2, C6 y C7: la votación marcada se registra con cualquier descuento, la automática solo con un descuento marcado, y el descuento más la votación no pasa de 100%* | RF-06 CA3 |
+| P-15 | Todas las reglas se leen de "parametros", incluidos los porcentajes de las exenciones y las fechas por facultad. *Desde el 2026-11-25 las fechas vienen de la plantilla (C3); las fechas por facultad ya no se usan. Cambiada el mismo día por F11: los porcentajes de las exenciones se leen de la tabla `exencion`* | RF-09 |
 
 Interpretación aplicada a P-5: se conserva lo que hace hoy el PHP con un porcentaje vacío (toma el
 valor por defecto de su posición) y se agrega la validación de que la suma sea 100.
@@ -480,7 +491,7 @@ valor por defecto de su posición) y se agrega la validación de que la suma sea
 | Validación del proyecto curricular activo y del valor de matrícula; orden de las validaciones; el estado H se rechaza por la lista de permitidos | `funcion.class.php` → `verificarCodigo`, `procesarRegistro`; `sql.class.php` → `carrerasTotales` | RF-03 |
 | Columnas que se escriben en `solicitud*` y `solicitudLote` | `sql.class.php` → `insertar*` | RF-12, RF-16 |
 | El lote se registra al cargarse, antes de validar el formato; `solicitudLote` no tiene columnas para totales | `funcion.class.php` (carga), `sql.class.php` → `insertarLote` | RF-12 |
-| Hoy se registran todas las exenciones marcadas y la cancelación no filtra por periodo | `funcion.class.php` → `guardarExencion`; `sql.class.php` → `cancelarSolicitud` | P-3, P-7 |
+| Hoy se registran todas las exenciones marcadas y la cancelación no filtra por periodo | `funcion.class.php` → `guardarExencion`; `sql.class.php` → `cancelarSolicitud` | P-3, P-7 (revertida por C8: la cancelación sigue en todos los periodos) |
 
 ### 12.3 Cambios acordados frente al sistema actual
 
@@ -489,29 +500,36 @@ La métrica de coincidencia del 100% (C-4) se mide **excluyendo** estos cambios 
 1. Sin exención "Reingreso"; plantilla de pregrado nueva, sin "Reingreso" y con las fechas de pago (Visión, C3).
 2. Sin pago diferido ni cuotas al 0% en pregrado (Visión).
 3. "Seguro Estudiantil" no se lee como número de cuotas (Visión).
-4. Descuentos no acumulables: como máximo un descuento más la votación; la fila con más de un descuento marcado no se sube (P-3, C2). La votación marcada se registra con cualquier descuento, también en pregrado con las columnas 8 a 13, así que el total puede pasar de 100%, como hoy en posgrado (C2). La votación automática no cambia (C1, A14).
+4. Descuentos no acumulables: como máximo un descuento más la votación; la fila con más de un descuento marcado no se sube (P-3, C2). La votación marcada se registra con cualquier descuento mientras la suma no pase de 100%; si pasa, se registra solo el descuento (C2, C7). Frente a hoy cambian dos casos: en pregrado, la votación marcada con un descuento de las columnas 8 a 13 se registra si la suma no pasa de 100% (hoy se quita siempre); en posgrado, la votación marcada se quita si la suma pasa de 100% (hoy se registra siempre). La votación automática da el mismo resultado que hoy (C1, C6, C7, A14). La Secretaría de Educación de posgrado no cuenta como descuento: puede ir con la votación y un descuento, como hoy (F12).
 5. Los porcentajes de las cuotas de posgrado deben sumar 100 (P-5).
-6. La cancelación de solicitudes sin imprimir se limita al periodo vigente (P-7).
+6. ~~La cancelación de solicitudes sin imprimir se limita al periodo vigente (P-7).~~ *Ya no es un cambio: con C8 (2026-11-25) la cancelación sigue abarcando todos los periodos, como hoy. El número se conserva porque otros documentos lo citan.*
 7. Validación estricta del archivo y de las filas: tipo real del archivo, fechas existentes con año completo, porcentajes 0–100 (Entorno técnico, "Validación de entradas").
 8. Posgrado: el número de cuotas es obligatorio y va de 1 a 3. Hoy la celda vacía genera 1 cuota, un 0 o un texto guardan la solicitud sin cuotas, y 4 o más dan un resultado imprevisible (RE-03, RE-04).
-9. Los estudiantes rechazados por estado, valor de matrícula o proyecto curricular también pierden sus solicitudes sin imprimir del periodo vigente; una falla al guardar la solicitud nueva no revierte la cancelación (RE-02). Hoy esos rechazados no cancelan nada.
+9. Los estudiantes rechazados por estado, valor de matrícula o proyecto curricular también pierden sus solicitudes sin imprimir, de todos los periodos (C8); una falla al guardar la solicitud nueva no revierte la cancelación (RE-02). Hoy esos rechazados no cancelan nada.
 10. Si el proyecto curricular no tiene periodo vigente, la fila no se sube y el mensaje pide reportarlo al área de sistemas (RE-05). Hoy se guarda la solicitud sin año ni periodo.
 11. Si faltan las fechas de pago en la plantilla o son inválidas, la fila no se sube (RE-06). Hoy, en pregrado, la cuota se guarda sin fechas cuando la facultad no las tiene, y en posgrado se guardan fechas vacías o erradas.
-12. Las fechas de pago de pregrado vienen de la plantilla y no de la tabla de fechas de cada facultad (C3). La columna de terminación de materias ya no cambia las fechas.
+12. Las fechas de pago de pregrado vienen de la plantilla y no de la tabla de fechas de cada facultad (C3). La columna de terminación de materias ya no cambia las fechas. Solo viene la ordinaria; la extraordinaria se calcula como en posgrado (F8).
+13. Un lote con más de 1000 filas con datos se rechaza completo (F1). Hoy no hay máximo.
+14. Si un código se repite en el lote, solo se procesa su primera aparición; las siguientes no se suben (`CODIGO_REPETIDO`) y no cancelan nada (F2). Hoy queda la solicitud de la última aparición.
+15. Una fila con datos y sin código aparece como no subida (`CODIGO_INVALIDO`) (F3). Hoy se omite sin aviso.
+16. Una celda con solo espacios no cuenta como marcada (F4). Hoy cuenta.
+17. El nivel del proyecto curricular del estudiante debe corresponder a la plantilla (`NIVEL_NO_CORRESPONDE`) (F5). Hoy no se revisa.
+18. Posgrado: la columna 2 (créditos o SMLV) es obligatoria y mayor que 0 (`UNIDAD_INVALIDA`) (F6), y los porcentajes de las cuotas son enteros (decisión de diseño). Hoy no se validan.
+19. Ninguna fecha ordinaria puede ser anterior al día de la carga, y en posgrado cada cuota vence después de la anterior (F7). Hoy no se revisa.
 
 ### 12.4 Preguntas nuevas
 
 - **P-12:** resuelta (2026-11-24): se registra el descuento de mayor porcentaje; en empate, el de la columna que aparece primero (A9). *Reemplazada por C2 (2026-11-25): la fila con más de un descuento no se sube.*
 - **P-13:** resuelta (2026-11-24): se conserva la regla actual de la votación, incluida la diferencia entre pregrado y posgrado. *Cambiada por C2 y C1 (2026-11-25): ver RF-06 CA3.*
 - **P-14:** ya no aplica (2026-11-25): con C2 ningún descuento se descarta; la fila con más de un descuento no se sube y el resumen da el motivo.
-- **P-15:** resuelta (2026-11-24): todas las reglas, incluidos los porcentajes de las exenciones y las fechas por facultad, se leen de "parametros". Consecuencia: si un porcentaje cambia, hay que cambiarlo en "parametros" y en la tabla `exencion`, que "Solicitados" usa para calcular el valor (confirmado con su código el 2026-11-25, RE-22). *Desde el 2026-11-25 las fechas por facultad ya no se usan: vienen de la plantilla (C3).*
+- **P-15:** resuelta (2026-11-24): todas las reglas, incluidos los porcentajes de las exenciones y las fechas por facultad, se leen de "parametros". Consecuencia: si un porcentaje cambia, hay que cambiarlo en "parametros" y en la tabla `exencion`, que "Solicitados" usa para calcular el valor (confirmado con su código el 2026-11-25, RE-22). *Cambiada en parte el 2026-11-25 por F11: los porcentajes de las exenciones se leen de la tabla `exencion`, así que ya no hay que cambiarlos en dos lugares.* *Desde el 2026-11-25 las fechas por facultad ya no se usan: vienen de la plantilla (C3).*
 
 ### 12.5 Extensiones de AI-DLC (decididas el 2026-11-24, en Units Generation)
 
 | Extensión | Decisión | Efecto en los requisitos |
 |---|---|---|
 | Seguridad | Activa; las 15 reglas son bloqueantes | RF-14 CA2: el token se valida en cada petición, sin caché (SECURITY-08). CORS con lista explícita de orígenes en todos los ambientes (D11). Throttling en WSO2 AM (D12). Registros con nivel y `request_id`; retención de al menos 90 días (A2). Auditoría de cambios con el estado antes y después (`application-design.md` AD-23 a AD-28) |
-| Pruebas basadas en propiedades | Parcial: bloqueantes PBT-02, 03, 07, 08 y 09 | RNF-6: las pruebas unitarias del dominio incluyen pruebas basadas en propiedades con Hypothesis (por ejemplo: los porcentajes suman 100, la fecha extraordinaria no cae en festivo, se registra un solo descuento). Siguen siendo pruebas unitarias automatizadas |
+| Pruebas basadas en propiedades | Parcial: bloqueantes PBT-02, 03, 07, 08 y 09 | RNF-6: las pruebas unitarias del dominio incluyen pruebas basadas en propiedades con Hypothesis (por ejemplo: los porcentajes suman 100, la fecha extraordinaria no cae en festivo, se registra un solo descuento, el descuento más la votación no pasa de 100%). Siguen siendo pruebas unitarias automatizadas |
 | Resiliencia | No activa | Sin cambios; se puede activar antes del paso a producción |
 
 Estas decisiones complementan `technical-environment.md`. Donde el entorno técnico describía el contrato de `utils_oas` (caché de 60 minutos, CORS `*` en dev), manda la extensión de seguridad, igual que con las mejoras que ese documento ya pedía para `sql_statement` y `data`.
@@ -531,8 +549,8 @@ Origen: respuestas del usuario a los hallazgos de `reverse-engineering/story-cod
 | RE-07 | `unidad` se guarda como `0` en pregrado, como hoy | RF-16 CA4 |
 | RE-13 | La IP se toma de `X-Forwarded-For` | RF-12 CA4; D13 |
 | RE-21 | Sin decisión del usuario: el código de "Solicitados" resuelve D3; `cuota` = 1 en pregrado | RF-16 CA4; D3; A15 |
-| A14 | "si no esta marcado en el archivo y si lo encuentras en la tabla ACCERELECTORAL aplica el descuento". Pendiente de C6 y C7 | RF-06 CA3; A14 |
-| RE-23, RE-26 | Abiertas: C7 (suma mayor que 100%) y C8 (cancelación de periodos anteriores) | RF-06 CA3; RF-08 CA4; P-7 |
+| A14, C6, C7 | Sobre A14: "si no esta marcado en el archivo y si lo encuentras en la tabla ACCERELECTORAL aplica el descuento". C6 = b: la votación automática solo en filas con un descuento marcado (se mantiene C1). C7 = a, "porque no supera el 100%": si el descuento y la votación pasan de 100%, se registra solo el descuento | RF-06 CA3; §4.A punto 4; cambio acordado 4; A14 |
+| RE-26, C8 | C8 = a: se cancelan las solicitudes sin imprimir de todos los periodos, como hoy; revierte P-7 | RF-08 CA4, CA5, CA6; §4.A punto 6; A12; cambios acordados 6 y 9 |
 | Reporte | El resumen muestra los que se subieron y los que no, con el motivo | RF-11 CA3 |
 | Máquina de desarrollo | Usar las versiones actualizadas de los lenguajes y herramientas. C4 = a: la última versión estable con soporte en todo el proyecto (máquina, imagen y CI); las versiones exactas se fijan en NFR Requirements | `technical-environment.md`; OQ-T-1; AD-27 |
 | RE-18 | Sin decisión propia; se aplica el supuesto A13 (más de un periodo = sin periodo vigente) | §4.A punto 6; §9 A13 |
@@ -548,3 +566,23 @@ El PHP no tiene estas funcionalidades. El usuario confirmó el 2026-11-25 que se
 |---|---|---|---|
 | Consultar el historial de lotes | US-13 | UC-02 | IN-8 |
 | Auditoría de cada petición | US-14 | Transversal (`services.md`) | IN-8 |
+
+### 12.8 Decisiones de U1 Functional Design (2026-11-25)
+Respuestas del usuario a las preguntas F1 a F13 de `aidlc-docs/construction/plans/recibos_service-functional-design-plan.md`: "f1 a, f2 b, f3 a, f4 a, f5 a, f6 a, f7 b, f8 a, f9 c, f10  a, f11 a, f12 b, f13 a".
+| Pregunta | Decisión | Afecta |
+|---|---|---|
+| F1 (P-1) | Un lote con más de 1000 filas con datos se rechaza completo (422) y queda registrado | RF-02 CA5; cambio acordado 13 |
+| F2 (P-2) | Código repetido: solo se procesa la primera aparición; las siguientes son `CODIGO_REPETIDO` y no cancelan nada | RF-03 CA8; cambio acordado 14 |
+| F3 | Fila con datos y sin código: `CODIGO_INVALIDO` ("Falta el código del estudiante") | RF-02 CA6; cambio acordado 15 |
+| F4 | Una celda con solo espacios no cuenta como marcada | RF-06 CA5; cambio acordado 16 |
+| F5 | El nivel del proyecto debe corresponder a la plantilla: `NIVEL_NO_CORRESPONDE` | RF-03 CA6, CA7; cambio acordado 17 |
+| F6 (P-6) | Créditos o SMLV obligatorios y mayores que 0; entero en créditos, hasta dos decimales en SMLV: `UNIDAD_INVALIDA` | RF-05 CA5; cambio acordado 18 |
+| F7 | Ninguna fecha ordinaria anterior al día de la carga; en posgrado, cada cuota vence después de la anterior | RF-05 CA4; cambio acordado 19 |
+| F8 (D1) | La plantilla de pregrado trae solo la fecha ordinaria (día, mes y año); la extraordinaria se calcula como en posgrado | RF-05 CA1, CA3; D1; cambio acordado 12 |
+| F9 (D5) | Los festivos son los de la tabla que usa hoy weboffice; el DBA la identifica | RF-05 CA3; D5 |
+| F10 (D5) | Solo los festivos de la tabla mueven la fecha; los sábados y domingos no | RF-05 CA3; D5 |
+| F11 (P-15) | Los porcentajes de las exenciones se leen de la tabla `exencion`, en solo lectura; "parametros" conserva los ids y los mapas | RF-06 CA6; RF-09; P-15; D10 |
+| F12 | La Secretaría de Educación no cuenta como descuento para C2: puede ir con la votación y un descuento | RF-06 CA4; cambio acordado 4 |
+| F13 (P-10) | No se exporta la lista de no subidos en el MVP | RF-11 CA4 |
+
+Siguen abiertas las aclaraciones F14 (¿la Secretaría entra en la suma de C7?) y F15 (¿la Secretaría sola activa la votación automática?), en `aidlc-docs/construction/plans/recibos_service-functional-design-clarification-questions.md`.
