@@ -21,10 +21,10 @@ Orden de construcción: U1 completa (diseño y código) y después U2. U2 se con
 | Aspecto | Detalle |
 |---|---|
 | Propósito | Cargar y procesar lotes de forma síncrona, consultar el historial y dejar la auditoría |
-| Responsabilidades | Validar archivo y plantilla; validar estudiantes en Oracle; calcular cuotas, exenciones y conceptos; cancelar y escribir solicitudes en MySQL con una transacción por estudiante; leer reglas de "parametros"; autenticar y autorizar cada petición; registrar la auditoría |
+| Responsabilidades | Validar archivo y plantilla; validar estudiantes en Oracle; calcular cuotas, exenciones y conceptos; cancelar las solicitudes sin imprimir en su propia transacción y escribir cada solicitud nueva en otra (AD-30); leer reglas de "parametros"; autenticar y autorizar cada petición; registrar la auditoría |
 | Componentes | `app/domain`, `app/application`, `app/infrastructure`, `app/interfaces` (`components.md`) |
 | Historias | US-01 y US-02 (lado servidor), US-03 a US-15 |
-| Tecnología | Python 3.12, Flask con Blueprints, gunicorn, flasgger (solo en local), SQLAlchemy 2.x Core (oracledb en modo thin, PyMySQL), xlrd 2.x, pydantic, httpx, boto3, aws-xray-sdk, flask-cors |
+| Tecnología | Python en su última versión estable con soporte (C4; hoy 3.14, se fija en NFR Requirements), Flask con Blueprints, gunicorn, flasgger (solo en local), SQLAlchemy 2.x Core (oracledb en modo thin, PyMySQL), xlrd 2.x, pydantic, httpx, boto3, aws-xray-sdk, flask-cors |
 | Pruebas | pytest y pytest-cov (≥ 80%; 100% en `app/domain`). Hypothesis para las pruebas basadas en propiedades (extensión en modo parcial; el framework se confirma en NFR Requirements, PBT-09) |
 | Etapas de Construction | Functional Design (completa), NFR Requirements (estándar), NFR Design (estándar), Infrastructure Design (mínima), Code Generation |
 
@@ -33,7 +33,7 @@ Orden interno de construcción, para que los insumos pendientes no frenen el res
 1. `app/domain`: reglas puras con sus pruebas, incluidas las de propiedades. Ningún insumo externo la bloquea; los datos de prueba de pregrado y SMLV se ajustan cuando lleguen D1 y D2.
 2. `app/application`: casos de uso y puertos, probados con dobles de los puertos.
 3. `app/interfaces`: Flask, sobre de respuesta, middlewares (autenticación, auditoría, cabeceras, CORS, errores) y `swagger/swagger.yml`.
-4. `app/infrastructure`: primero xlrd, S3, SSM, reloj y WSO2; después Oracle; al final MySQL (D3, D4) y "parametros" (D6, D10).
+4. `app/infrastructure`: primero xlrd, S3, SSM, reloj y WSO2; después Oracle; al final MySQL (D4) y "parametros" (D6, D10).
 
 Definición de terminado:
 - Las historias listas están implementadas y probadas. Las bloqueadas, hasta donde lo permite el insumo, con el hueco marcado.
@@ -111,7 +111,7 @@ Extensión de seguridad activa. Dónde se implementa o verifica cada regla:
 | Regla | U1 | U2 |
 |---|---|---|
 | PBT-02 Ida y vuelta | Conversión fecha ↔ timestamp Unix (America/Bogota) | Por evaluar en U2 NFR Requirements |
-| PBT-03 Invariantes | Los porcentajes suman 100; la fecha extraordinaria no cae en festivo y es al menos 8 días después de la ordinaria; se registra un solo descuento, el de mayor porcentaje; la votación aparece como máximo una vez | Por evaluar |
+| PBT-03 Invariantes | Los porcentajes suman 100; la fecha extraordinaria no cae en festivo y es al menos 8 días después de la ordinaria; una solicitud lleva como máximo un descuento, y una fila con más de uno no se sube (C2); la votación aparece como máximo una vez | Por evaluar |
 | PBT-07 Generadores | Generadores de filas de plantilla, fechas, porcentajes y reglas que respetan los límites del negocio | — |
 | PBT-08 Reducción y reproducibilidad | Hypothesis con semilla registrada en CI | — |
 | PBT-09 Framework | Hypothesis (se confirma en U1 NFR Requirements) | fast-check, solo si aplica |

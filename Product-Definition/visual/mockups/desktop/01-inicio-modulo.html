@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=1280, initial-scale=1">
+  <title>Recibos por lote — Inicio del módulo de recibos</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen" style='font-family: "Open Sans", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;'>
+  <div class="bg-amber-200 text-amber-900 text-center py-1 text-sm font-medium">🎨 MAQUETA — no funcional · Generado por aidlc-discovery</div>
+
+  <!-- Encabezado: representa el root y el core institucionales (guía visual: sga_cliente_admisiones_mf) -->
+  <header class="bg-gradient-to-r from-[#013960] via-[#024a72] to-[#03678f] text-white shadow-md">
+    <div class="px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <span class="w-10 h-10 rounded-full bg-white/15 ring-1 ring-white/40 flex items-center justify-center font-bold tracking-wide">UD</span>
+        <div>
+          <p class="text-[11px] uppercase tracking-[0.14em] text-[#b3d1dd]">Universidad Distrital Francisco José de Caldas</p>
+          <p class="font-semibold text-lg leading-tight">Recibos por lote</p>
+        </div>
+      </div>
+      <!-- fuente: Visión §Usuarios (rol único ARC); documento inventado -->
+      <p class="flex items-center gap-2 bg-white/10 ring-1 ring-white/25 rounded-full pl-1 pr-4 py-1 text-sm">
+        <span class="w-7 h-7 rounded-full bg-white text-[#03678f] flex items-center justify-center"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-3.5 3.6-5.5 8-5.5s8 2 8 5.5"/></svg></span>
+        Admisiones, Registro y Control · 79123456
+      </p>
+    </div>
+  </header>
+
+  <div class="flex min-h-[calc(100vh-5.5rem)]">
+    <nav aria-label="Menú del módulo" class="w-64 shrink-0 bg-white border-r border-slate-200 py-6">
+      <p class="px-6 mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-600">Recibos por lote</p>
+      <a href="01-inicio-modulo.html" class="flex items-center gap-3 px-6 py-2.5 text-sm font-semibold bg-[#e1edf2] text-[#013960] border-l-4 border-[#03678f]"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg><span>Inicio</span></a>
+      <a href="02-cargar-lote.html" class="flex items-center gap-3 px-6 py-2.5 text-sm text-slate-700 border-l-4 border-transparent hover:bg-slate-50"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5" aria-hidden="true"><path d="M12 15V4m0 0l-4 4m4-4l4 4"/><path d="M4 15v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg><span>Cargar lote</span></a>
+      <a href="04-historial-lotes.html" class="flex items-center gap-3 px-6 py-2.5 text-sm text-slate-700 border-l-4 border-transparent hover:bg-slate-50"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>Historial de lotes</span></a>
+      <div class="mx-6 mt-8 rounded-xl bg-[#e3ebf2] p-4 text-xs text-[#062e67]">
+        <p class="font-semibold mb-1 flex items-center gap-2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3z"/></svg>Datos protegidos</p>
+        <!-- fuente: Visión §Restricciones (Ley 1581) -->
+        <p>Los datos de los estudiantes se tratan según la Ley 1581 de 2012.</p>
+      </div>
+    </nav>
+    <main class="flex-1 px-10 py-8 relative">
+      <p class="text-xs text-slate-600 mb-2 flex items-center gap-1"><span>Recibos por lote</span> <span class="text-slate-400"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 inline" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></span> <span>Inicio</span></p>
+      <section class="rounded-2xl bg-gradient-to-br from-[#e1edf2] via-white to-white ring-1 ring-[#b3d1dd] p-8 mb-8">
+        <h1 class="text-3xl font-bold text-[#013960] mb-2">Recibos por lote</h1>
+        <!-- fuente: Visión §Resumen ejecutivo y §Estado actual -->
+        <p class="text-slate-700 max-w-3xl">Genera en una sola carga las solicitudes de recibo de pago de matrícula de un grupo de estudiantes. Los recibos se generan e imprimen después en "Solicitados".</p>
+      </section>
+      <div class="grid grid-cols-2 gap-6 mb-8">
+        <section class="bg-white rounded-2xl shadow-sm ring-1 ring-slate-200 p-6 flex flex-col">
+          <span class="w-12 h-12 rounded-xl bg-[#03678f] text-white flex items-center justify-center mb-4 shadow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6" aria-hidden="true"><path d="M12 15V4m0 0l-4 4m4-4l4 4"/><path d="M4 15v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg></span>
+          <h2 class="text-xl font-semibold text-[#013960] mb-2">Cargar lote</h2>
+          <!-- fuente: Visión IN-1 e IN-7 -->
+          <p class="text-sm text-slate-700 mb-6 flex-1">Sube una plantilla .xls de pregrado, posgrado por créditos o posgrado en SMLV, y revisa qué estudiantes se subieron y cuáles no.</p>
+          <a href="02-cargar-lote.html" class="inline-flex items-center justify-center gap-2 whitespace-nowrap shrink-0 bg-[#03678f] text-white font-semibold px-5 py-2.5 rounded-lg shadow-sm hover:bg-[#02547c] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#145a95] self-start">Abrir Cargar lote</a>
+        </section>
+        <section class="bg-white rounded-2xl shadow-sm ring-1 ring-slate-200 p-6 flex flex-col">
+          <span class="w-12 h-12 rounded-xl bg-[#145a95] text-white flex items-center justify-center mb-4 shadow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+          <h2 class="text-xl font-semibold text-[#013960] mb-2">Historial de lotes</h2>
+          <!-- fuente: Visión IN-8 -->
+          <p class="text-sm text-slate-700 mb-6 flex-1">Consulta quién cargó cada archivo, cuándo y desde qué IP.</p>
+          <a href="04-historial-lotes.html" class="inline-flex items-center justify-center gap-2 whitespace-nowrap shrink-0 bg-white text-[#03678f] font-semibold px-5 py-2.5 rounded-lg border border-[#81b3c7] hover:bg-[#e1edf2] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#145a95] self-start">Abrir Historial de lotes</a>
+        </section>
+      </div>
+      <section class="bg-white rounded-2xl shadow-sm ring-1 ring-slate-200 p-6">
+        <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-600 mb-4">Cómo funciona</h2>
+        <!-- fuente: Visión §Estado actual (flujo hasta "Solicitados") -->
+        <ol class="grid grid-cols-3 gap-6"><li class="flex gap-3"><span class="w-8 h-8 shrink-0 rounded-full bg-[#e1edf2] text-[#013960] font-semibold flex items-center justify-center">1</span><span class="text-sm text-slate-700 pt-1.5">Carga la plantilla .xls del grupo de estudiantes.</span></li><li class="flex gap-3"><span class="w-8 h-8 shrink-0 rounded-full bg-[#e1edf2] text-[#013960] font-semibold flex items-center justify-center">2</span><span class="text-sm text-slate-700 pt-1.5">Revisa el reporte: quiénes se subieron y quiénes no, con el motivo.</span></li><li class="flex gap-3"><span class="w-8 h-8 shrink-0 rounded-full bg-[#e1edf2] text-[#013960] font-semibold flex items-center justify-center">3</span><span class="text-sm text-slate-700 pt-1.5">Genera e imprime los recibos en "Solicitados".</span></li></ol>
+      </section>
+      <!-- fuente: Visión IN-9 -->
+      <p class="text-xs text-slate-600 mt-6 flex items-center gap-2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3z"/></svg>Solo los usuarios con el rol Admisiones, Registro y Control ven este módulo.</p>
+    </main>
+  </div>
+
+  <footer class="text-xs text-slate-600 text-center py-5 mt-10 border-t border-slate-200">
+    <a href="../../user-journey.md" class="underline">Ver recorrido del usuario</a> ·
+    <a href="index.html" class="underline">Todas las pantallas</a> ·
+    <a href="../index.html" class="underline">Escritorio y móvil</a>
+  </footer>
+</body>
+</html>

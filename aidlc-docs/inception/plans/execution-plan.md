@@ -16,7 +16,7 @@ Notas de método:
 | Etapa | Decisión | Profundidad | Motivo |
 |---|---|---|---|
 | Workspace Detection | Completada | — | Brownfield; Discovery completo |
-| Reverse Engineering | Omitir | — | Discovery ya analizó el sistema actual (`existing-system-analysis.md`, `templates-analysis.md`, `utils-oas-analysis.md`, `institutional-guidelines-analysis.md`). El código PHP se lee de forma puntual cuando una regla lo requiere |
+| Reverse Engineering | Ejecutada (agregada el 2026-11-25 a pedido del usuario) | Estándar | Primero se omitió porque Discovery ya había analizado el sistema actual (`existing-system-analysis.md`, `templates-analysis.md`, `utils-oas-analysis.md`, `institutional-guidelines-analysis.md`). El 2026-11-25 el usuario pidió hacerla con base en las historias, los casos de uso y el código. Artefactos en `inception/reverse-engineering/`; los análisis de Discovery se referencian. Aprobada el 2026-11-25 |
 | Requirements Analysis | Completada | Completa | Aprobada 2026-11-24 |
 | User Stories | Completada | Estándar | Aprobadas 2026-11-24 |
 | Workflow Planning | En revisión | — | Este documento |
@@ -53,7 +53,7 @@ Flujo general (texto equivalente: tabla de §1):
 ```mermaid
 flowchart TD
     WD["Workspace Detection: completada"] --> RA["Requirements Analysis: aprobada"]
-    RE["Reverse Engineering: omitida"] -.-> RA
+    RE["Reverse Engineering: agregada el 2026-11-25"] -.-> RA
     RA --> USS["User Stories: aprobadas"]
     USS --> WP["Workflow Planning: en revisión"]
     WP --> AD["Application Design: estándar"]
@@ -87,15 +87,16 @@ flowchart LR
 | Momento | Pregunta o insumo | Desbloquea | Quién puede responder |
 |---|---|---|---|
 | Workflow Planning (resuelto 2026-11-24) | P-12 → mayor porcentaje; P-13 → regla actual de la votación | US-07 desbloqueada; US-08 sigue bloqueada por D5 y D2 | Usuario |
+| Reverse Engineering (resuelto 2026-11-25) | C1 a C5: C1 a (sin votación automática en filas sin exenciones marcadas), C2 b (más de un descuento: la fila no se sube; votación marcada con cualquier descuento), C3 b (fechas de pregrado desde la plantilla), C4 a (versiones actualizadas), C5 b (módulo de notas de ARC en la Fase 2) | US-08 sin C1 ni C2; US-07 pasa a depender de D1 | Usuario / ARC |
 | U1 Functional Design | D5: origen de los festivos y si sábados y domingos cuentan | US-08 | DBA / OATI |
-| U1 Functional Design | D1: plantilla de pregrado de 13 columnas (A1, fila inicial, encabezados) | US-03 | ARC |
+| U1 Functional Design | D1: plantilla de pregrado sin Reingreso y con las fechas de pago (A1, fila inicial, encabezados, columnas y formato de las fechas, y si trae la fecha extraordinaria) | US-03, US-07 | ARC |
 | U1 Functional Design | D2: plantilla de posgrado SMLV | US-05 y variante SMLV de US-08 | ARC |
-| U1 Functional Design | D3: valor de `solicitudRecibo.cuota` en pregrado y demás estados | US-11 | DBA / dueño de "Solicitados" |
-| U1 Functional Design | P-1, P-2, P-6, P-10, P-14 | US-02, US-06, US-07, US-08, US-12 | Usuario / ARC |
+| U1 Functional Design | ~~D3~~ resuelta el 2026-11-25 con el código de "Solicitados" (RE-21, A15). C6, C7 y C8: respuesta sobre A14, suma mayor que 100% y cancelación de periodos anteriores | US-07, US-08, US-09 | Usuario |
+| U1 Functional Design | P-1, P-2, P-6, P-10 (P-14 ya no aplica desde C2) | US-02, US-06, US-08, US-12 | Usuario / ARC |
 | U1 Functional Design (entrega) | D10: lista de parámetros de las reglas para crear en "parametros" (dev y test) | US-15 | OATI / ARC los crean |
 | U1 NFR Requirements | Tiempo de respuesta objetivo para un lote de 1000 estudiantes (RNF-1) | — | Usuario |
-| U1 Infrastructure Design | D7: rutas SSM, destino y retención de logs (mínimo 90 días), tamaño máximo y retención en S3; D11: orígenes de CORS; D12: throttling en WSO2 AM; requisitos de AD-28 | — | Infraestructura / Seguridad / Arquitectura |
-| Antes de U1 Code Generation | Cómo correr las pruebas: en esta máquina no hay Python, Node ni Docker | Build and Test | Usuario |
+| U1 Infrastructure Design | D7: rutas SSM, destino y retención de logs (mínimo 90 días), tamaño máximo y retención en S3; D11: orígenes de CORS; D12: throttling en WSO2 AM; D13: número de proxies de confianza para la IP (AD-29); requisitos de AD-28 | — | Infraestructura / Seguridad / Arquitectura |
+| Antes de U1 Code Generation | Herramientas de la máquina: el usuario pidió usar las versiones vigentes (2026-11-25). Ya hay Docker 29 y Python 3.14; Node 18 se cambia por una LTS con soporte antes de U2. C4 = a: el proyecto usa la última versión estable de cada lenguaje | Build and Test | Usuario |
 | U1 Code Generation | D4: DDL real, prefijo de las tablas y llaves primarias; D6 (acotada): campo del valor de cada regla, ids por ambiente, URL y autenticación; D8: identificador del rol ARC | US-09 a US-11 | DBA; usuario / OATI; Arquitectura |
 | U2 NFR Requirements | OQ-T-1: versiones de Angular, TypeScript y Node | — | Se verifican en `oas_cliente` (`feature/clientes_nuevos`) |
 
@@ -106,8 +107,8 @@ Regla: si un insumo no llega en su momento, la historia sigue bloqueada y el tra
 | Riesgo | Impacto | Mitigación |
 |---|---|---|
 | D6 y D10 siguen en la ruta crítica: ya se conocen la consulta por id y el formato del sobre, pero falta el campo del valor de cada regla, sus ids y que los parámetros se creen en el servicio | Sin eso no se puede terminar el adaptador de reglas de U1 | El puerto aísla el dominio; el adaptador es lo último de U1. Si el formato no llega a tiempo, se decide en ese momento contigo cómo seguir |
-| D3/D4 (DBA) llegan tarde | No se puede cerrar el adaptador de escritura MySQL | Las columnas ya se conocen por el código; solo faltan tipos exactos, el valor de `cuota` en pregrado y los demás estados |
+| D4 (DBA) llega tarde | No se puede cerrar el adaptador de escritura MySQL | Las columnas, el valor de `cuota` y los estados ya se conocen por el código del lote y de "Solicitados" (RE-21); solo faltan los tipos exactos, el prefijo y las llaves |
 | Los tiempos de espera de gunicorn, el balanceador y WSO2 AM no permiten 1000 estudiantes en una petición | El lote falla aunque el código esté bien | Se fija el objetivo en U1 NFR Requirements y se entrega a infraestructura en Infrastructure Design |
 | Festivos sin origen conocido (D5) | No se puede cerrar la fecha extraordinaria de posgrado | Se pregunta al inicio de U1 Functional Design |
-| En la máquina de desarrollo no hay Python, Node ni Docker | No se pueden correr las pruebas mientras se genera el código | Se pregunta antes de U1 Code Generation: instalar Python 3.12 y Node LTS, o correr las pruebas solo en Drone |
+| Herramientas de la máquina de desarrollo (verificado el 2026-11-25: Docker 29, Python 3.14, Node 18 sin soporte) | Probar con versiones distintas de las del despliegue | El usuario pidió usar las versiones vigentes; con C4 = a el proyecto también usa las versiones vigentes. Las pruebas pueden correr en contenedores con la misma imagen del despliegue |
 | `oas_cliente` trae una versión de Angular sin soporte (SECURITY-09) | Hay que actualizar la plantilla en U2 | Se revisa en U2 NFR Requirements |

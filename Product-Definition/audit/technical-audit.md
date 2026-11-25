@@ -285,3 +285,21 @@ Do not rewrite this file. Use Read + Edit (append) only.
 **Context**: handoff-format.md
 
 ---
+## [Correction from AI-DLC Inception — admin_consultasCoordinador]
+**Timestamp**: 2026-11-25T15:10:12Z
+**User Input**: "(see business-audit.md, same timestamp — verbatim)"
+**AI Action**: "existing-system-analysis.md: level 132 confirmed as Admisiones, Registro y Control ('ORC' in the code); admin_consultasCoordinador noted as the ARC grades module (misnamed); R3 clarified. Full log in aidlc-docs/audit.md."
+**Context**: Product-Definition/interview/technical/existing-system-analysis.md
+---
+## [Correction from AI-DLC Inception — C4]
+**Timestamp**: 2026-11-25T15:28:01Z
+**User Input**: "(see business-audit.md, same timestamp — verbatim)"
+**AI Action**: "technical-environment.md: Python 3.12 replaced by the latest stable supported version (today 3.14; exact version fixed in U1 NFR Requirements); Node LTS and supported Angular (C4 = a). Full log in aidlc-docs/audit.md."
+**Context**: Product-Definition/technical-environment.md
+---
+## [Correction from AI-DLC Inception — "Solicitados" code analyzed]
+**Timestamp**: 2026-11-25T16:35:48Z
+**User Input**: "1. ya lo habias leido pero analizalo de nuevo si lo necesitas. 2. si no esta marcado en el archivo y si lo encuentras en la tabla ACCERELECTORAL aplica el descuento"
+**AI Action**: "existing-system-analysis.md: the related-modules bullet now says that 'Solicitados' is in the workspace as bloque/admin_solicitudCoordinador and was analyzed in Reverse Engineering (RE-20..RE-26). Full log in aidlc-docs/audit.md."
+**Context**: Product-Definition/interview/technical/existing-system-analysis.md
+---

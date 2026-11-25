@@ -33,7 +33,10 @@ Respuesta **201**: el lote se procesó, aunque tenga estudiantes rechazados.
     "id_lote": 1532,
     "tipo_plantilla": "PREGRADO",
     "total_filas": 3,
-    "procesados": 2,
+    "procesados": [
+      { "fila": 4, "codigo": "20231020001" },
+      { "fila": 5, "codigo": "20231020017" }
+    ],
     "rechazados": [
       {
         "fila": 6,
@@ -52,7 +55,7 @@ Respuesta **422**: el lote quedó registrado, pero la plantilla no tiene el form
 {
   "Success": false,
   "Status": 422,
-  "Message": "La plantilla de pregrado debe tener 13 columnas; el archivo tiene 14",
+  "Message": "La plantilla de pregrado no es la vigente: trae la columna Reingreso",
   "Data": { "id_lote": 1533 }
 }
 ```
@@ -80,11 +83,11 @@ Valores de `motivo` y texto de referencia de `mensaje` (los textos finales se aj
 | `ESTADO_NO_PERMITIDO` | El estado del estudiante no permite generar el recibo |
 | `CARRERA_INACTIVA` | El proyecto curricular del estudiante no está activo |
 | `NO_TERMINACION_MATERIAS` | El estado del estudiante es diferente de terminación de materias |
-| `SIN_PERIODO_VIGENTE` | El proyecto curricular no tiene periodo vigente |
-| `SIN_FECHAS_FACULTAD` | La facultad no tiene fechas de pago |
-| `CUOTAS_INVALIDAS` | El número de cuotas debe estar entre 1 y 3 |
-| `FECHA_INVALIDA` | Fecha inválida en la cuota indicada |
+| `SIN_PERIODO_VIGENTE` | No hay periodo vigente para el proyecto curricular del estudiante. Repórtelo al área de sistemas (RE-05) |
+| `CUOTAS_INVALIDAS` | El número de cuotas es obligatorio y debe estar entre 1 y 3 (RE-03, RE-04) |
+| `FECHA_INVALIDA` | Falta la fecha o es inválida en la cuota indicada (RE-06) |
 | `PORCENTAJE_INVALIDO` | El porcentaje debe estar entre 0 y 100 |
+| `DESCUENTOS_NO_ACUMULABLES` | Solo se puede marcar un descuento además de la votación (C2) |
 | `PORCENTAJES_NO_SUMAN_100` | Los porcentajes de las cuotas deben sumar 100 |
 | `ERROR_GUARDADO` | Error al guardar la solicitud |
 
@@ -147,12 +150,17 @@ export interface Rechazo {
   mensaje: string;
 }
 
+export interface Procesado {
+  fila: number;
+  codigo: string;
+}
+
 export interface ResumenLote {
   id_lote: number;
   tipo_plantilla: TipoPlantilla;
   total_filas: number;
-  procesados: number;
-  rechazados: Rechazo[];
+  procesados: Procesado[];   // los que se subieron (RF-11 CA3)
+  rechazados: Rechazo[];     // los que no se subieron, con el motivo
 }
 
 export interface Lote {

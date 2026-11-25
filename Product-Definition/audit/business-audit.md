@@ -295,3 +295,37 @@ Do not rewrite this file. Use Read + Edit (append) only.
 **Context**: Product-Definition/vision-document.md
 
 ---
+## [Correction from AI-DLC Inception — admin_consultasCoordinador]
+**Timestamp**: 2026-11-25T15:10:12Z
+**User Input**: "lee esta carpeta de codigo que es la logica del usuario registro y control, el nombre dice coordinador pero no es del usuario coordinador solo que esta mal nombrado: .../codigo-fuente/weboffice/bloque/admin_consultasCoordinador y haz los cambios correspondientes de las etapas que hemos trabajado,y lo que me preguntes o respondas dimelo en español"
+**AI Action**: "vision-document.md, Funcionalidades OUT: the row 'Consultas de notas del coordinador' now says 'Consultas de notas de Admisiones, Registro y Control' (module misnamed). Scope unchanged (still out of the project); confirmation pending as clarification C5 in aidlc-docs/inception/reverse-engineering/reverse-engineering-clarification-questions.md. Full log in aidlc-docs/audit.md."
+**Context**: Product-Definition/vision-document.md
+---
+## [Correction from AI-DLC Inception — C5]
+**Timestamp**: 2026-11-25T15:28:01Z
+**User Input**: "c5 b, c1 a, c2 b pero solo pueden tener un descuento por votación mas otro pero en ese de dos descuentos sumados solo se pueden con el de votacion y otro, c3 b, c4 a
+
+continuar"
+**AI Action**: "vision-document.md, Funcionalidades OUT: the ARC grades module (admin_consultasCoordinador) moves from 'Fuera del proyecto' to 'Fase 2' (C5 = b). Scope of the first version unchanged. Full log in aidlc-docs/audit.md."
+**Context**: Product-Definition/vision-document.md
+---
+## [Visual Sketch — Opt-in (reopened)]
+**Timestamp**: 2026-11-25T15:39:53Z
+**User Input**: "donde podemos ver los diagramas de flujo Reverse Engineering y hacer el paso Boceto visual"
+**AI Action**: "User explicitly asked to run the previously skipped Visual Sketch, so it counts as option A of Step 0 and no visual-prompt.md is written. Wrote interview/visual/visual-questions.md (V1–V5, in Spanish, with recommended options) and asked the same questions in chat (conversational mode)."
+**Context**: Product-Definition/interview/visual/visual-questions.md; state/session-index.md
+---
+## [Visual Sketch — Answers and Generation]
+**Timestamp**: 2026-11-25T15:51:35Z
+**User Input**: "v1 a,  v4, v5, para las demás mira el ejemplo de este cliente de otro sistema en la oficina para que lo tomes de guia visual: https://github.com/udistrital/sga_cliente_admisiones_mf"
+**AI Action**: "Recorded answers in interview/visual/visual-answers-history.md: V1 A; V3 = brand taken from udistrital/sga_cliente_admisiones_mf (read-only clone of branch develop, commit 5a4dc4f, in /tmp; only colors, typography and screen patterns used); V2, V4 and V5 had no letter, so the recommended options were applied (B, A, A) and flagged for confirmation at the gate. Generated visual/user-journey.md and 7 HTML files in visual/mockups/. Validation passed: 6 nodes = 6 screens, 10 edges = 10 matching links, banner first in body, only the Tailwind CDN script, identical header, data-source comments, index lists 6 screens, Mermaid parses (Mermaid 12.3.0), HTML tags balanced. Gate presented."
+**Context**: Product-Definition/visual/; Product-Definition/interview/visual/
+---
+## [Visual Sketch — Completion]
+**Timestamp**: 2026-11-25T16:02:39Z
+**User Input**: "V2 b: el camino normal y dos alternos.  
+V4 a: datos realistas, con códigos, documentos e IP inventados.  
+V5 c: escritorio y movil., aprobar y continuar, pero hazlos mas bonitos"
+**AI Action**: "V2 B and V4 A confirmed; V5 changed to C (desktop and mobile). User approved on condition of a nicer design: mockups regenerated with the same brand guide into visual/mockups/desktop/ and visual/mockups/mobile/ plus a top index; old single-viewport files removed. Validation passed for both sets (6 nodes = 6 screens, 10 edges = 10 links, banner first, Tailwind CDN only, identical header per set, data-source comments, balanced HTML) and headless Chrome screenshots were reviewed. Status set to Complete; flow returns to AI-DLC Inception (Units Generation approval pending)."
+**Context**: Product-Definition/visual/; Product-Definition/interview/visual/visual-answers-history.md
+---

@@ -121,7 +121,7 @@ Ninguna. La visión anterior representa todo el alcance considerado.
 | Generar e imprimir el recibo en el sistema nuevo | Se sigue usando el módulo actual ("Solicitados"); la primera versión solo le entrega las solicitudes | Fase 2 o después |
 | Migrar las solicitudes históricas del MySQL actual | La primera versión trabaja solo con solicitudes nuevas | Por definir (ver OQ-B-6) |
 | Código que ya no se usa: `action.php`, `html.php`, "PLANTILLA SIMPLE" | No forman parte del flujo actual | No se migra |
-| Consultas de notas del coordinador (`admin_consultasCoordinador`) | No tienen relación con los recibos | Fuera del proyecto |
+| Consultas de notas de Admisiones, Registro y Control (`admin_consultasCoordinador`; el nombre dice "coordinador" por error, corrección del usuario del 2026-11-25) | No tienen relación con los recibos | Fase 2 (decisión del usuario del 2026-11-25, aclaración C5 de Reverse Engineering; antes: fuera del proyecto) |
 | Recibos / exención de reingreso (C-045558) | Decisión de negocio; la plantilla de pregrado se modificará para no incluirlo | Excluido |
 
 ---

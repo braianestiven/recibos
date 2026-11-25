@@ -40,20 +40,23 @@ sequenceDiagram
     participant MF as recibos_mf
     participant API as interfaces
     participant UC as ProcesarLote
-    participant PAR as parametros
+    participant PRM as parametros
     participant S3 as S3
     participant MY as MySQL
     participant ORA as Oracle
     MF->>API: POST /v1/lotes con archivo y token Bearer
     API->>API: token, rol, tamaño y tipo del archivo
     API->>UC: ejecutar(comando)
-    UC->>PAR: GET /v1/parametro/id por cada regla
+    UC->>PRM: GET /v1/parametro/id por cada regla
     UC->>S3: guardar archivo
     UC->>MY: INSERT en solicitudLote
     UC->>UC: formato y filas en el dominio
     UC->>ORA: estudiantes, proyectos y certificados en bloque
-    loop cada estudiante válido
-        UC->>MY: transacción con cancelación y nueva solicitud
+    loop cada estudiante con periodo vigente conocido
+        UC->>MY: cancela las sin imprimir del periodo en su propia transacción
+        opt estudiante válido
+            UC->>MY: transacción con la solicitud nueva
+        end
     end
     UC-->>API: ResumenLote
     API-->>MF: 201 con el sobre institucional
@@ -71,7 +74,7 @@ sequenceDiagram
 | SSM | Lectura al arrancar | Credenciales de Oracle y MySQL, dirección del daemon de X-Ray | `LectorSsm` |
 | CloudWatch Logs | Escritura | Auditoría JSON por stdout | `middlewares/auditoria` |
 
-Ya no se usan porque sus reglas se eliminaron o no aplican al rol único: `mntac.fua_verifica_diferido` y `ACEST.est_diferido` (no hay pago diferido), `ACRANGOSPAGO`, y las consultas de carreras por coordinador o asistente (`carrerasCoordinador`, `consultarProyectosAsistente`). Con esto la cuenta de Oracle necesita menos permisos. Tampoco se leen las tablas MySQL `exencion` y `fechaPagoFacultad`, porque sus datos pasan a "parametros" (P-15 a); la cuenta de MySQL solo necesita permisos sobre las tablas `solicitud*`.
+Ya no se usan porque sus reglas se eliminaron o no aplican al rol único: `mntac.fua_verifica_diferido` y `ACEST.est_diferido` (no hay pago diferido), `ACRANGOSPAGO`, y las consultas de carreras por coordinador o asistente (`carrerasCoordinador`, `consultarProyectosAsistente`). Con esto la cuenta de Oracle necesita menos permisos. Tampoco se leen las tablas MySQL `exencion`, porque sus datos pasan a "parametros" (P-15 a), ni `fechaPagoFacultad`, porque las fechas vienen de la plantilla (C3); tampoco hace falta la facultad del proyecto (`ACCRA.cra_dep_cod`); la cuenta de MySQL solo necesita permisos sobre las tablas `solicitud*`.
 
 ## 5. Comunicación
 

@@ -4,16 +4,16 @@
 |---|---|---|---|
 | US-01 Iniciar sesión y acceder con el rol ARC | Validación del token en cada petición y del rol (middlewares) | Sesión desde el core, envío del token, acceso desde el menú | ✅ Lista |
 | US-02 Cargar un archivo de lote | `POST /v1/lotes`: tipo, tamaño, S3, `solicitudLote` | Selección y envío del archivo; sin segundo envío mientras procesa | ✅ Lista |
-| US-03 Formato de pregrado (13 columnas) | Especificación y validación de la plantilla | — | 🔒 D1 |
+| US-03 Formato de pregrado (sin Reingreso, con fechas) | Especificación y validación de la plantilla | — | 🔒 D1 |
 | US-04 Formato de posgrado por créditos | Especificación y validación de la plantilla | — | ✅ Lista |
 | US-05 Formato de posgrado SMLV | Especificación y validación de la plantilla | — | 🔒 D2 |
 | US-06 Validar estudiantes en Oracle | Validaciones académicas y lecturas en bloque | — | ✅ Lista |
-| US-07 Solicitudes de pregrado | Cuota, exenciones y conceptos | — | ✅ Lista |
-| US-08 Solicitudes de posgrado | Cuotas, fechas, exenciones y conceptos | — | 🔒 D5 (SMLV: D2) |
-| US-09 Cancelar solicitudes sin imprimir | Cancelación en el periodo vigente | — | ✅ Lista |
-| US-10 Guardar la solicitud completa o no guardarla | Transacción por estudiante | — | ✅ Lista |
-| US-11 Entregar las solicitudes a "Solicitados" | Escritura en las tablas `solicitud*` | — | 🔒 D3, D4 |
-| US-12 Ver el resumen del lote | `ResumenLote` en la respuesta | Pantalla de resumen y rechazados | ✅ Lista |
+| US-07 Solicitudes de pregrado | Cuota con las fechas de la plantilla, exenciones y conceptos | — | 🔒 D1, C6, C7 |
+| US-08 Solicitudes de posgrado | Cuotas, fechas, exenciones y conceptos | — | 🔒 D5, C6, C7 (SMLV: D2) |
+| US-09 Cancelar solicitudes sin imprimir | Cancelación en el periodo vigente, también para los rechazados (AD-30) | — | 🔒 C8 |
+| US-10 Guardar la solicitud completa o no guardarla | Transacción por solicitud nueva; la cancelación va aparte (AD-30) | — | ✅ Lista |
+| US-11 Entregar las solicitudes a "Solicitados" | Escritura en las tablas `solicitud*` | — | 🔒 D4 |
+| US-12 Ver el resumen del lote | `ResumenLote` en la respuesta | Pantalla de resumen: los que se subieron y los que no, con el motivo | ✅ Lista |
 | US-13 Consultar el historial de lotes | `GET /v1/lotes` paginado | Tabla paginada | ✅ Lista |
 | US-14 Auditoría de cada petición | Auditoría y registro de aplicación | — | ✅ Lista |
 | US-15 Reglas desde "parametros" | Cliente de "parametros" | — | ✅ Lista |
@@ -26,7 +26,7 @@ Verificación: las 15 historias tienen unidad. U1 participa en las 15 y U2 en 4 
 |---|---|---|
 | RNF-1 Rendimiento (lote síncrono de 1000) | Procesamiento y tiempos de espera | Indicador de espera, sin segundo envío |
 | RNF-2 Seguridad y cumplimiento | Todas las reglas SECURITY del backend | Token sin guardar, escape de Angular, cabeceras del servidor estático |
-| RNF-3 Integridad de datos | Transacción por estudiante | — |
+| RNF-3 Integridad de datos | Transacción por solicitud nueva; cancelación en su propia transacción | — |
 | RNF-4 Mantenibilidad | Clean Architecture y contrato OpenAPI | Estructura de `oas_cliente` |
 | RNF-5 Observabilidad | Auditoría, registros y X-Ray | Registros de acceso |
 | RNF-6 Pruebas | pytest, Hypothesis, cobertura y SonarQube | `*.spec.ts` y SonarQube |

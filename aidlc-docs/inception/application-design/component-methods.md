@@ -1,6 +1,6 @@
 # Métodos de los componentes
 
-Firmas de diseño en Python 3.12. Code Generation puede cambiar nombres internos, pero no las responsabilidades ni los tipos de entrada y salida. Las reglas detalladas de cada función se cierran en U1 Functional Design.
+Firmas de diseño en Python (la última versión estable con soporte, C4; se fija en U1 NFR Requirements). Code Generation puede cambiar nombres internos, pero no las responsabilidades ni los tipos de entrada y salida. Las reglas detalladas de cada función se cierran en U1 Functional Design.
 
 ## 1. Dominio (`app/domain/`)
 
@@ -14,14 +14,15 @@ Firmas de diseño en Python 3.12. Code Generation puede cambiar nombres internos
 | `Usuario` | `documento: str`, `sub: str`, `roles: frozenset[str]` |
 | `Estudiante` | `codigo: int`, `estado: str`, `codigo_carrera: int`, `tiene_valor_matricula: bool` |
 | `Periodo` | `anio: int`, `numero: int` |
-| `ContextoCarrera` | `codigo: int`, `activa: bool`, `codigo_facultad: int \| None`, `periodo: Periodo \| None`, `terminacion_activa: bool` |
+| `ContextoCarrera` | `codigo: int`, `activa: bool`, `periodo: Periodo \| None` (ninguno o más de uno: `None`, A13), `terminacion_activa: bool` |
 | `FechasPago` | `ordinaria: date`, `extraordinaria: date` |
 | `Cuota` | `numero: int`, `porcentaje: int` (0–100), `fechas: FechasPago` |
 | `DatosPosgrado` | `numero_cuotas: int`, `unidad: str`, `fechas_ordinarias: tuple[date, ...]`, `porcentajes: tuple[int \| None, ...]` |
-| `Solicitud` | `codigo_estudiante: int`, `codigo_carrera: int`, `periodo: Periodo`, `tipo: TipoPlantilla`, `unidad: str \| None`, `cuotas: tuple[Cuota, ...]`, `exenciones: tuple[int, ...]`, `conceptos: tuple[int, ...]` |
-| `MotivoRechazo` (Enum) | `CODIGO_INVALIDO`, `ESTUDIANTE_NO_ENCONTRADO`, `SIN_VALOR_MATRICULA`, `ESTADO_NO_PERMITIDO`, `CARRERA_INACTIVA`, `NO_TERMINACION_MATERIAS`, `SIN_PERIODO_VIGENTE`, `SIN_FECHAS_FACULTAD`, `CUOTAS_INVALIDAS`, `FECHA_INVALIDA`, `PORCENTAJE_INVALIDO`, `PORCENTAJES_NO_SUMAN_100`, `ERROR_GUARDADO` |
+| `Solicitud` | `codigo_estudiante: int`, `codigo_carrera: int`, `periodo: Periodo`, `tipo: TipoPlantilla`, `unidad: str` (créditos o SMLV en posgrado; `"0"` en pregrado, RE-07), `cuotas: tuple[Cuota, ...]`, `exenciones: tuple[int, ...]`, `conceptos: tuple[int, ...]` |
+| `MotivoRechazo` (Enum) | `CODIGO_INVALIDO`, `ESTUDIANTE_NO_ENCONTRADO`, `SIN_VALOR_MATRICULA`, `ESTADO_NO_PERMITIDO`, `CARRERA_INACTIVA`, `NO_TERMINACION_MATERIAS`, `SIN_PERIODO_VIGENTE`, `CUOTAS_INVALIDAS`, `FECHA_INVALIDA`, `PORCENTAJE_INVALIDO`, `PORCENTAJES_NO_SUMAN_100`, `DESCUENTOS_NO_ACUMULABLES`, `ERROR_GUARDADO` |
 | `Rechazo` | `fila: int`, `codigo: str \| None`, `motivo: MotivoRechazo`, `detalle: str \| None` |
-| `ResumenLote` | `id_lote: int`, `tipo: TipoPlantilla`, `total_filas: int`, `procesados: int`, `rechazados: tuple[Rechazo, ...]` |
+| `Procesado` | `fila: int`, `codigo: int` |
+| `ResumenLote` | `id_lote: int`, `tipo: TipoPlantilla`, `total_filas: int`, `procesados: tuple[Procesado, ...]`, `rechazados: tuple[Rechazo, ...]` (RF-11 CA3) |
 | `NuevoLote` | `documento_usuario: str`, `nombre_original: str`, `nombre_interno: str`, `ip: str`, `fecha: datetime` |
 | `Lote` | `id: int`, `documento_usuario: str`, `nombre_original: str`, `ip: str`, `fecha: datetime` |
 | `Pagina[T]` | `elementos: tuple[T, ...]`, `total: int`, `limite: int`, `desplazamiento: int` |
@@ -41,12 +42,10 @@ Firmas de diseño en Python 3.12. Code Generation puede cambiar nombres internos
 | `conceptos_por_columna: Mapping[TipoPlantilla, Mapping[int, int]]` | pregrado 2→2, 3→3, 4→4; posgrado 4→2, 5→3, 6→4 |
 | `exenciones_por_columna: Mapping[TipoPlantilla, Mapping[int, int]]` | según `templates-analysis.md` |
 | `id_exencion_votacion: int` | 1 |
-| `columnas_que_anulan_votacion: Mapping[TipoPlantilla, frozenset[int]]` | pregrado 8–13; posgrado ninguna |
-| `umbral_votacion_automatica: int` | 90 |
+| `umbral_votacion_automatica: int` | 90 (solo para la votación automática, A14; en revisión por C6 y C7) |
 | `porcentaje_por_exencion: Mapping[int, Decimal]` | hoy en la tabla MySQL `exencion`; en el sistema nuevo, de "parametros" (P-15 a) |
 | `porcentajes_por_defecto: Mapping[int, tuple[int, ...]]` | 1: (100); 2: (60, 40); 3: (40, 30, 30) |
 | `dias_fecha_extraordinaria: int` | 8 |
-| `fechas_por_facultad: Mapping[tuple[int, bool], FechasPago]` | hoy en la tabla `fechaPagoFacultad`; en el sistema nuevo, de "parametros" (P-15 a). La llave es (facultad, terminación de materias) |
 
 ```python
 class ReglasLiquidacion:
@@ -54,7 +53,6 @@ class ReglasLiquidacion:
     def concepto_de_columna(self, tipo: TipoPlantilla, columna: int) -> int | None: ...
     def porcentaje_exencion(self, id_exencion: int) -> Decimal: ...
     def porcentaje_por_defecto(self, numero_cuotas: int, posicion: int) -> int: ...
-    def fechas_facultad(self, codigo_facultad: int, terminacion: bool) -> FechasPago | None: ...
 ```
 
 ### 1.3 Plantillas (`plantillas.py`)
@@ -70,10 +68,10 @@ class EspecificacionPlantilla:
     columnas_concepto: range           # pregrado 2–4; posgrado 4–6
     columnas_exencion: range           # pregrado 5–13; posgrado 7–17
     columna_votacion: int              # pregrado 5; posgrado 7
-    columna_terminacion: int | None    # pregrado 8
     columna_unidad: int | None         # posgrado 2
     columna_cuotas: int | None         # posgrado 3
-    columnas_fecha: tuple[tuple[int, int, int], ...]  # posgrado (18,19,20), (21,22,23), (24,25,26)
+    columnas_fecha: tuple[tuple[int, int, int], ...]  # posgrado (18,19,20), (21,22,23), (24,25,26); pregrado según D1 (C3)
+    trae_fecha_extraordinaria: bool    # pregrado: según D1; posgrado: no (se calcula)
     columnas_porcentaje: tuple[int, ...]              # posgrado 27, 28, 29
 
 def identificar(hoja: HojaPlantilla) -> EspecificacionPlantilla: ...
@@ -90,7 +88,8 @@ def extraer_filas(hoja: HojaPlantilla, espec: EspecificacionPlantilla) -> list[F
 # validacion_filas.py
 def validar_codigo(fila: FilaPlantilla) -> int | Rechazo: ...
 def validar_posgrado(fila: FilaPlantilla, espec: EspecificacionPlantilla) -> DatosPosgrado | Rechazo: ...
-    # cuotas 1–3; cada cuota con fecha existente y año de 4 dígitos; porcentajes 0–100 o vacíos
+    # cuotas obligatorias, de 1 a 3 (vacío o fuera de rango: CUOTAS_INVALIDAS, RE-03 y RE-04)
+    # cada cuota con fecha existente y año de 4 dígitos (si falta: FECHA_INVALIDA, RE-06); porcentajes 0–100 o vacíos
 
 # validacion_estudiante.py
 def validar(fila: FilaPlantilla, codigo: int, estudiante: Estudiante | None,
@@ -107,17 +106,18 @@ def fecha_extraordinaria(ordinaria: date, dias: int, festivos: AbstractSet[date]
 
 # cuotas.py
 def cuotas_pregrado(fechas: FechasPago) -> tuple[Cuota]: ...
+    # las fechas vienen de la fila de la plantilla (C3); si la extraordinaria no viene, se calcula como en posgrado (D1)
 def cuotas_posgrado(datos: DatosPosgrado, reglas: ReglasLiquidacion,
                     festivos: AbstractSet[date]) -> tuple[Cuota, ...] | Rechazo: ...
     # completa los porcentajes vacíos por posición; rechaza si la suma no es 100
 
 # exenciones.py
 def seleccionar(fila: FilaPlantilla, espec: EspecificacionPlantilla, reglas: ReglasLiquidacion,
-                tiene_certificado: bool) -> tuple[int, ...]: ...
+                tiene_certificado: bool) -> tuple[int, ...] | Rechazo: ...
     # 1. descuentos marcados = columnas de exención marcadas, sin la de votación
-    # 2. se registra el de mayor porcentaje; en empate, el de la columna menor (P-12, A9)
-    # 3. votación marcada: se registra salvo que haya marcada una columna que la anula (P-13)
-    # 4. si no quedó votación: se agrega si hay certificado y el descuento registrado es ≤ umbral, o si no hay descuento
+    # 2. más de un descuento marcado: Rechazo DESCUENTOS_NO_ACUMULABLES; la fila no se sube (C2)
+    # 3. votación marcada: se registra siempre, con o sin descuento, en las dos plantillas (C2)
+    # 4. sin votación marcada: se agrega la automática si hay certificado, hay un descuento marcado y su porcentaje es ≤ umbral (C1, A14)
     # 5. la votación aparece una sola vez
 
 # conceptos.py
@@ -129,7 +129,7 @@ def seleccionar(fila: FilaPlantilla, espec: EspecificacionPlantilla,
 def generar(fila: FilaPlantilla, espec: EspecificacionPlantilla, codigo: int,
             estudiante: Estudiante, contexto: ContextoCarrera, reglas: ReglasLiquidacion,
             festivos: AbstractSet[date], tiene_certificado: bool) -> Solicitud | Rechazo: ...
-    # SIN_PERIODO_VIGENTE si el proyecto no tiene periodo; SIN_FECHAS_FACULTAD si faltan fechas (pregrado)
+    # SIN_PERIODO_VIGENTE si el proyecto no tiene periodo o tiene más de uno (A13); FECHA_INVALIDA si faltan fechas en la plantilla (RE-06)
 ```
 
 ## 2. Aplicación (`app/application/`)
@@ -151,9 +151,11 @@ class RepositorioAcademico(Protocol):
 
 class RepositorioSolicitudes(Protocol):
     def registrar_lote(self, lote: NuevoLote) -> int: ...
+    def cancelar_sin_imprimir(self, codigo_estudiante: int, periodo: Periodo) -> tuple[int, ...]: ...
+        # transacción propia: estado 0 → 2 de las sin imprimir del estudiante en ese periodo; devuelve los ids (AD-25, AD-30); ErrorPersistencia
     def guardar_solicitud(self, solicitud: Solicitud, documento_usuario: str,
-                          creada_en: datetime) -> None: ...
-        # una transacción: cancela las sin imprimir del estudiante en ese periodo e inserta todo; ErrorPersistencia
+                          creada_en: datetime) -> int: ...
+        # una transacción: recibo, cuotas, exenciones y conceptos; devuelve el id; ErrorPersistencia. No revierte la cancelación (RE-02)
     def listar_lotes(self, limite: int, desplazamiento: int) -> Pagina[Lote]: ...
 
 class FuenteReglas(Protocol):
@@ -177,7 +179,7 @@ class CargarLoteComando:
     contenido: bytes
     nombre_original: str
     usuario: Usuario
-    ip: str
+    ip: str                               # de X-Forwarded-For con los proxies de confianza (AD-29)
 
 class ProcesarLote:                       # UC-01
     def ejecutar(self, comando: CargarLoteComando) -> ResumenLote: ...
@@ -195,7 +197,7 @@ class AutorizarUsuario:                   # UC-03
 | Clase | Constructor | Métodos |
 |---|---|---|
 | `RepositorioAcademicoOracle` | `engine` (`oracle+oracledb`) | Los del puerto. Consultas en bloques de hasta 1000 códigos (límite de `IN` en Oracle) |
-| `RepositorioSolicitudesMySQL` | `engine` (`mysql+pymysql`), `prefijo_tablas` | Los del puerto. `guardar_solicitud` usa `engine.begin()` |
+| `RepositorioSolicitudesMySQL` | `engine` (`mysql+pymysql`), `prefijo_tablas` | Los del puerto. `cancelar_sin_imprimir` y `guardar_solicitud` usan cada uno su propio `engine.begin()` (AD-30) |
 | `AlmacenamientoS3` | cliente boto3, `bucket` | `guardar`: `put_object` con cifrado del lado del servidor |
 | `LectorXlrd` | — | `leer`: `xlrd.open_workbook(file_contents=...)`, primera hoja, solo celdas con contenido |
 | `ProveedorIdentidadWso2` | `url_userinfo`, cliente httpx | `usuario`: llama a `/oauth2/userinfo` en cada petición, sin caché (AD-09) |

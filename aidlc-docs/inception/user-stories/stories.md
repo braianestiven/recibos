@@ -4,7 +4,7 @@
 - Fuente: `aidlc-docs/inception/requirements/requirements.md` (aprobado 2026-11-24)
 - Persona principal: Profesional de ARC (`personas.md`)
 - Decisiones de planificación: Q1-a (por capacidad), Q2-a (solo IN), **Q3-b (borradores bloqueados)**, Q4-a, Q5-a (Dado/Cuando/Entonces), Q6-a (español, Must)
-- Estado: **aprobadas 2026-11-24**. Actualizadas el mismo día con las decisiones P-3, P-5, P-7 y P-11 y con lo que muestra el código PHP actual (ver §Registro de cambios)
+- Estado: **aprobadas 2026-11-24**. Actualizadas el mismo día con las decisiones P-3, P-5, P-7 y P-11 y con lo que muestra el código PHP actual (ver §Registro de cambios). Actualizadas el 2026-11-25 con las decisiones de Reverse Engineering y con el análisis de "Solicitados" (mismo registro; D3 resuelta, C6 a C8 abiertas)
 
 ## Convenciones
 
@@ -23,21 +23,21 @@
 |---|---|---|---|---|
 | US-01 | Iniciar sesión y acceder con el rol ARC | E1 Acceso | RF-14, RF-15 | ✅ Lista |
 | US-02 | Cargar un archivo de lote | E2 Carga | RF-01, RF-12 | ✅ Lista |
-| US-03 | Validar el formato de la plantilla de pregrado (13 columnas) | E2 Carga | RF-02 | 🔒 Bloqueada (D1) |
+| US-03 | Validar el formato de la plantilla de pregrado (sin Reingreso, con fechas) | E2 Carga | RF-02 | 🔒 Bloqueada (D1) |
 | US-04 | Validar el formato de la plantilla de posgrado por créditos | E2 Carga | RF-02 | ✅ Lista |
 | US-05 | Validar el formato de la plantilla de posgrado SMLV | E2 Carga | RF-02 | 🔒 Bloqueada (D2) |
 | US-06 | Validar cada estudiante contra Oracle académico | E3 Procesamiento | RF-03 | ✅ Lista |
-| US-07 | Generar solicitudes de pregrado | E3 Procesamiento | RF-04, RF-05, RF-06, RF-07 | ✅ Lista |
-| US-08 | Generar solicitudes de posgrado | E3 Procesamiento | RF-04, RF-05, RF-06, RF-07 | 🔒 Bloqueada (D5; variante SMLV: D2) |
-| US-09 | Cancelar solicitudes anteriores sin imprimir | E3 Procesamiento | RF-08 | ✅ Lista |
+| US-07 | Generar solicitudes de pregrado | E3 Procesamiento | RF-04, RF-05, RF-06, RF-07 | 🔒 Bloqueada (D1, C6, C7) |
+| US-08 | Generar solicitudes de posgrado | E3 Procesamiento | RF-04, RF-05, RF-06, RF-07 | 🔒 Bloqueada (D5, C6, C7; variante SMLV: D2) |
+| US-09 | Cancelar solicitudes anteriores sin imprimir | E3 Procesamiento | RF-08 | 🔒 Bloqueada (C8) |
 | US-10 | Guardar cada solicitud completa o no guardarla | E3 Procesamiento | RF-10 | ✅ Lista |
-| US-11 | Entregar las solicitudes a "Solicitados" | E3 Procesamiento | RF-16, RF-04 | 🔒 Bloqueada (D3 acotada, D4) |
+| US-11 | Entregar las solicitudes a "Solicitados" | E3 Procesamiento | RF-16, RF-04 | 🔒 Bloqueada (D4) |
 | US-12 | Ver el resumen del lote procesado | E4 Resultados | RF-11 | ✅ Lista |
 | US-13 | Consultar el historial de lotes | E4 Resultados | RF-12 | ✅ Lista |
 | US-14 | Registrar la auditoría de cada petición | E4 Resultados | RF-13 | ✅ Lista |
 | US-15 | Obtener las reglas desde el servicio "parametros" | E5 Reglas | RF-09 | ✅ Lista |
 
-Total: 15 historias. 11 listas, 4 bloqueadas.
+Total: 15 historias. 9 listas, 6 bloqueadas. US-13 y US-14 son funcionalidades nuevas, sin equivalente en el sistema actual (`requirements.md` §12.7).
 
 ---
 
@@ -73,7 +73,7 @@ Escenario 4: El cliente intenta enviar su propio rol o permisos
   Entonces ignora ese valor y decide solo con el rol obtenido a partir del token
 ```
 
-- Reglas: el token y los datos personales no se guardan en `localStorage` ni en cookies sin protección. El backend valida el token en cada petición, sin caché (SECURITY-08).
+- Reglas: el token y los datos personales no se guardan en `localStorage` ni en cookies sin protección. El backend valida el token en cada petición, sin caché (SECURITY-08). El rol ARC corresponde al nivel 132 de weboffice; en el módulo de notas de ARC (`admin_consultasCoordinador`) ese nivel llega en el parámetro `tipoUser` de la petición (R3, RE-19), y el escenario 4 evita repetir ese defecto.
 - Dependencias técnicas: ninguna.
 
 ---
@@ -105,27 +105,27 @@ Escenario 3: Archivo demasiado grande
   Entonces el sistema rechaza el lote indicando el tamaño máximo permitido
 ```
 
-- Reglas: el archivo no queda en el disco local del contenedor. El nombre original no se usa como nombre de almacenamiento. El lote se registra al cargarse, antes de validar el formato, como hoy; los archivos rechazados por tipo o tamaño no se guardan ni se registran (la petición queda en la auditoría, US-14).
+- Reglas: el archivo no queda en el disco local del contenedor. El nombre original no se usa como nombre de almacenamiento. La IP se toma de `X-Forwarded-For`, con la dirección que agrega el último proxy de confianza (RE-13, D13). El lote se registra al cargarse, antes de validar el formato, como hoy; los archivos rechazados por tipo o tamaño no se guardan ni se registran (la petición queda en la auditoría, US-14).
 - Dependencias técnicas: tamaño máximo y retención en S3 (A1, D7); documento del usuario desde WSO2 (A8).
 - Puntos por confirmar: `[P-1]` lotes con más de 1000 estudiantes.
 
-### US-03 — Validar el formato de la plantilla de pregrado (13 columnas)
-- **Estado:** 🔒 Borrador — bloqueada (**D1**: plantilla oficial de pregrado de 13 columnas, OQ-B-3)
+### US-03 — Validar el formato de la plantilla de pregrado (sin Reingreso, con fechas)
+- **Estado:** 🔒 Borrador — bloqueada (**D1**: plantilla oficial de pregrado sin Reingreso y con las fechas de pago, OQ-B-3 y C3)
 - **Prioridad:** Must · **Trazabilidad:** RF-02 CA1, CA4 · IN-1 · C-3
 - **Historia:** Como profesional de ARC, quiero que el sistema reconozca la plantilla de pregrado y rechace cualquier formato distinto, para no generar solicitudes a partir de datos mal ubicados.
 
 ```text
 Escenario 1: Plantilla de pregrado vigente
   Dado un archivo cuya celda A1 dice "PLANTILLA GENERAL PREGRADOS" [PENDIENTE D1: confirmar texto]
-  Y tiene exactamente 13 columnas con los encabezados oficiales [PENDIENTE D1: encabezados finales]
+  Y tiene las columnas y los encabezados oficiales: las 13 de hoy sin "Reingreso" más las de fecha de pago [PENDIENTE D1: número de columnas, encabezados y posición de las fechas]
   Cuando el sistema valida el formato
   Entonces lo identifica como tipo 1 (pregrado)
   Y lee los datos desde la fila 4 [PENDIENTE D1: confirmar fila inicial]
 
-Escenario 2: Plantilla anterior de 14 columnas (con "Reingreso")
-  Dado un archivo de pregrado con 14 columnas
+Escenario 2: Plantilla anterior (con "Reingreso")
+  Dado un archivo de pregrado con la estructura anterior, que trae la columna "Reingreso"
   Cuando el sistema valida el formato
-  Entonces rechaza el lote con un motivo que indica que se debe usar la plantilla vigente de 13 columnas
+  Entonces rechaza el lote con un motivo que indica que se debe usar la plantilla vigente
 
 Escenario 3: Columnas o encabezados que no coinciden
   Dado un archivo de pregrado con otro número de columnas o con encabezados en otro orden
@@ -134,7 +134,8 @@ Escenario 3: Columnas o encabezados que no coinciden
   Y no procesa ninguna fila
 ```
 
-- Columnas esperadas (supuesto hasta D1, según `templates-analysis.md` sin la columna 14): 1 Código del estudiante · 2 Seguro Estudiantil · 3 Carnet Estudiantil · 4 Sistematización · 5 10% votación · 6 2do Hermano · 7 3er Hermano · 8 Terminación de Materias · 9 Beneficiario · 10 Matrícula de Honor · 11 Deportista de alto rendimiento · 12 Estudiante Distinguido / Cultural-Científico · 13 Mérito Académico.
+- La plantilla anterior se reconoce por sus encabezados, no por el número de columnas, porque la nueva también puede tener 14 o más.
+- Columnas esperadas (supuesto hasta D1, según `templates-analysis.md` sin la columna 14; faltan las de fecha, C3): 1 Código del estudiante · 2 Seguro Estudiantil · 3 Carnet Estudiantil · 4 Sistematización · 5 10% votación · 6 2do Hermano · 7 3er Hermano · 8 Terminación de Materias · 9 Beneficiario · 10 Matrícula de Honor · 11 Deportista de alto rendimiento · 12 Estudiante Distinguido / Cultural-Científico · 13 Mérito Académico.
 - Para desbloquear: ARC entrega el `.xls` oficial en `documentacion/plantillas-recibos/` y confirma A1, fila inicial y encabezados.
 
 ### US-04 — Validar el formato de la plantilla de posgrado por créditos
@@ -233,14 +234,21 @@ Escenario 7: Evento de terminación de materias activo
   Y el estado del estudiante no es T ni H
   Cuando el sistema procesa la fila
   Entonces rechaza ese estudiante con el motivo "El estado del estudiante es diferente de terminación de materias"
+
+Escenario 8: Proyecto curricular sin periodo vigente
+  Dado un estudiante que pasa las validaciones anteriores
+  Y su proyecto curricular no tiene año y periodo vigentes en la base académica (evento 80), o tiene más de uno (A13)
+  Cuando el sistema procesa la fila
+  Entonces no sube ese estudiante
+  Y el motivo dice "No hay periodo vigente para el proyecto curricular del estudiante. Repórtelo al área de sistemas"
 ```
 
-- Reglas: Oracle se consulta solo en lectura, con parámetros enlazados. ARC procesa estudiantes de cualquier proyecto curricular activo (comportamiento actual del nivel 132). Las validaciones se aplican en el orden de los escenarios 3 a 7, como hoy, y el motivo es el de la primera que falla. Como H no está en la lista de estados permitidos, un estudiante en H se rechaza en el escenario 5 (comportamiento actual, P-8 resuelto). La lista de estados y el número de evento vienen de los parámetros (US-15), no del código.
+- Reglas: Oracle se consulta solo en lectura, con parámetros enlazados. Un estudiante rechazado pierde igualmente sus solicitudes sin imprimir del periodo vigente, si ese periodo se conoce (US-09, RE-02). El escenario 8 es un cambio acordado (RE-05): hoy la solicitud se guarda sin año ni periodo. ARC procesa estudiantes de cualquier proyecto curricular activo (comportamiento actual del nivel 132). Las validaciones se aplican en el orden de los escenarios 3 a 8 (los escenarios 3 a 7 en el orden de hoy; el 8 es nuevo), y el motivo es el de la primera que falla. Como H no está en la lista de estados permitidos, un estudiante en H se rechaza en el escenario 5 (comportamiento actual, P-8 resuelto). La lista de estados y el número de evento vienen de los parámetros (US-15), no del código.
 - Dependencias técnicas: valores de los parámetros (D6).
 - Puntos por confirmar: `[P-2]` estudiante repetido en el mismo lote.
 
 ### US-07 — Generar solicitudes de pregrado
-- **Estado:** ✅ Lista (desbloqueada 2026-11-24 con P-12 y P-13; el código actual ya mostró el origen del periodo y de las fechas de la facultad)
+- **Estado:** 🔒 Borrador — bloqueada (**D1**: plantilla oficial de pregrado con las fechas de pago; columnas de fecha y si trae la fecha extraordinaria). C1, C2 y C3 se resolvieron el 2026-11-25 C6 y C7 quedan abiertas desde el 2026-11-25 (votación automática según la respuesta sobre A14).
 - **Prioridad:** Must · **Trazabilidad:** RF-04, RF-05 CA1, RF-06, RF-07 · IN-3
 - **Historia:** Como profesional de ARC, quiero que cada estudiante de pregrado válido reciba una solicitud con una sola cuota, sus exenciones y sus conceptos, para que su recibo salga con el valor y las fechas correctas.
 
@@ -249,7 +257,7 @@ Escenario 1: Cuota única
   Dado un estudiante de pregrado válido
   Cuando el sistema genera su solicitud
   Entonces crea exactamente una cuota al 100%
-  Y toma la fecha ordinaria y la extraordinaria de las fechas de pago de la facultad de su proyecto curricular (tipo normal)
+  Y toma las fechas de pago de su fila en la plantilla [PENDIENTE D1: columnas de fecha y si la extraordinaria viene en la plantilla o se calcula como en posgrado]
   Y asocia la solicitud al año y periodo vigentes de su proyecto curricular (evento 80 del calendario académico)
 
 Escenario 2: Sin diferido ni cuotas al 0%
@@ -270,31 +278,31 @@ Escenario 4: Un descuento
   Entonces registra ese descuento con el id que indica el mapa columna → exención
   Y no registra la exención "Reingreso"
 
-Escenario 5: Varios descuentos (no acumulables)
+Escenario 5: Más de un descuento (no acumulables)
   Dado una fila con dos o más descuentos marcados en las columnas 6 a 13
-  Cuando el sistema genera la solicitud
-  Entonces registra solo el descuento de mayor porcentaje
-  Y si dos tienen el mismo porcentaje, registra el de la columna que aparece primero
+  Cuando el sistema procesa la fila
+  Entonces no sube ese estudiante
+  Y aparece en el resumen con el motivo "Solo se puede marcar un descuento además de la votación"
 
 Escenario 6: Votación marcada
   Dado una fila con la columna "10% votación" marcada
-  Y ningún descuento marcado en las columnas 8 a 13
+  Y como máximo un descuento marcado
   Cuando el sistema genera la solicitud
-  Entonces registra la exención de votación una sola vez, además del descuento si lo hay
+  Entonces registra la exención de votación una sola vez
+  Y registra también el descuento, si lo hay
 
 Escenario 7: Votación marcada con un descuento de las columnas 8 a 13
   Dado una fila con la columna "10% votación" marcada
-  Y algún descuento marcado en las columnas 8 a 13
+  Y un descuento marcado en las columnas 8 a 13
   Cuando el sistema genera la solicitud
-  Entonces no registra la votación marcada
-  Y la votación solo puede registrarse por la regla automática (escenario 8)
+  Entonces registra la votación y el descuento
 
 Escenario 8: Votación automática
-  Dado un estudiante sin votación registrada por los escenarios 6 o 7
-  Y con certificado electoral activo en ACCERELECTORAL
-  Y sin descuento, o con un descuento registrado menor o igual a 90%
+  Dado una fila sin la columna "10% votación" marcada
+  Y con un descuento marcado de 90% o menos
+  Y el estudiante tiene certificado electoral activo en ACCERELECTORAL
   Cuando el sistema genera la solicitud
-  Entonces registra la exención de votación una sola vez
+  Entonces registra la exención de votación una sola vez, además del descuento
 
 Escenario 9: Conceptos
   Dado un estudiante de pregrado válido
@@ -305,19 +313,37 @@ Escenario 9: Conceptos
 Escenario 10: Terminación de materias
   Dado una fila con la columna "Terminación de Materias" marcada (columna 8)
   Cuando el sistema genera la solicitud
-  Entonces toma las fechas de pago de la facultad del tipo "terminación de materias" (hoy tipo 3) en lugar de las normales
-  Y las usa aunque se registre otro descuento de mayor porcentaje (escenario 5)
-  Y registra la exención de terminación de materias (hoy id 4) solo si es el descuento que queda registrado
+  Entonces registra la exención de terminación de materias (hoy id 4) como el descuento de la fila
+  Y toma las fechas de pago de la plantilla, como en cualquier otra fila
+
+Escenario 11: Fila sin fechas de pago
+  Dado una fila de pregrado sin las fechas de pago, o con una fecha inválida [PENDIENTE D1: columnas de fecha]
+  Cuando el sistema procesa la fila
+  Entonces no sube ese estudiante
+  Y aparece en el resumen con el motivo "Falta la fecha o es inválida"
+
+Escenario 12: Fila sin exenciones marcadas
+  Dado una fila sin ninguna columna de exención marcada
+  Y el estudiante tiene certificado electoral activo
+  Cuando el sistema genera la solicitud
+  Entonces no registra la votación automática, como hoy
+
+Escenario 13: Descuento de más de 90% sin votación marcada
+  Dado una fila con un descuento marcado de más de 90%
+  Y sin la columna "10% votación" marcada
+  Y el estudiante tiene certificado electoral activo
+  Cuando el sistema genera la solicitud
+  Entonces registra solo el descuento
 ```
 
-- Reglas: una columna está marcada si su celda tiene cualquier contenido, como hoy. Los IDs, porcentajes, fechas de la facultad y el mapa columna → exención vienen de los parámetros (US-15). Salvo los cambios acordados, la solicitud coincide con la del sistema actual.
-- Cambios acordados: sin diferido ni cuotas al 0%; "Seguro" no es cuota; sin "Reingreso"; descuentos no acumulables, se registra el de mayor porcentaje (P-3, P-12; hoy se registran todos los marcados). La regla de la votación no cambia (P-13).
-- Dependencias técnicas: las fechas de la facultad y el porcentaje de cada exención se leen de "parametros" (P-15 a; formato D6, creación D10).
-- Supuesto: A9 (empate entre descuentos).
-- Puntos por confirmar: `[P-14]` avisar en el resumen cuando se descarta un descuento.
+- Reglas: una columna está marcada si su celda tiene cualquier contenido, como hoy. Los IDs, porcentajes y el mapa columna → exención vienen de los parámetros (US-15); las fechas vienen de la plantilla (C3). Salvo los cambios acordados, la solicitud coincide con la del sistema actual.
+- Cambios acordados: sin diferido ni cuotas al 0%; "Seguro" no es cuota; sin "Reingreso"; las fechas vienen de la plantilla y no de las fechas de la facultad, y la columna de terminación de materias ya no cambia las fechas (C3); sin fechas la fila no se sube (RE-06); con más de un descuento marcado la fila no se sube (C2; hoy se registran todos los marcados); la votación marcada se registra con cualquier descuento, también con los de las columnas 8 a 13 (C2; hoy no se registra con esas columnas), así que el total puede pasar de 100%.
+- Sin cambio frente a hoy: la votación automática (escenarios 8, 12 y 13; C1 y supuesto A14). **En revisión (C6 y C7, 2026-11-25):** la respuesta del usuario sobre A14 cambiaría los escenarios 12 y 13.
+- Dependencias técnicas: el porcentaje de cada exención se lee de "parametros" (P-15 a; formato D6, creación D10).
+- Para desbloquear: ARC entrega la plantilla oficial de pregrado con las columnas de fecha (D1).
 
 ### US-08 — Generar solicitudes de posgrado
-- **Estado:** 🔒 Borrador — bloqueada (**D5**: origen de los festivos y si sábados y domingos cuentan; la variante SMLV depende además de **D2**). P-12 y P-13 ya están resueltas.
+- **Estado:** 🔒 Borrador — bloqueada (**D5**: origen de los festivos y si sábados y domingos cuentan; la variante SMLV depende además de **D2**). C1 y C2 se resolvieron el 2026-11-25. C6 y C7 quedan abiertas desde el 2026-11-25 (votación automática y suma mayor que 100%).
 - **Prioridad:** Must · **Trazabilidad:** RF-04, RF-05 CA2–CA3, RF-06, RF-07 · IN-3
 - **Historia:** Como profesional de ARC, quiero que cada estudiante de posgrado reciba una solicitud con las cuotas, fechas y porcentajes indicados en la plantilla, para respetar los acuerdos de pago de cada programa.
 
@@ -350,10 +376,11 @@ Escenario 5: Fecha extraordinaria
   Entonces suma 8 días calendario a D
   Y si ese día es festivo, avanza un día a la vez hasta el primero que no lo sea [PENDIENTE D5: origen de los festivos y si sábados y domingos cuentan]
 
-Escenario 6: Número de cuotas inválido
-  Dado una fila con cuotas fuera de 1 a 3
+Escenario 6: Número de cuotas vacío o inválido
+  Dado una fila sin número de cuotas o con un número fuera de 1 a 3
   Cuando el sistema procesa la fila
-  Entonces rechaza ese estudiante con el motivo "Número de cuotas inválido"
+  Entonces no sube ese estudiante
+  Y aparece en el resumen con el motivo "El número de cuotas es obligatorio y debe estar entre 1 y 3"
 
 Escenario 7: Fecha o porcentaje inválido
   Dado una fila en la que alguna de sus N cuotas no tiene fecha, tiene una fecha inexistente o sin año completo, o tiene un porcentaje fuera de 0 a 100
@@ -361,10 +388,10 @@ Escenario 7: Fecha o porcentaje inválido
   Entonces rechaza ese estudiante indicando la cuota y la columna con error
 
 Escenario 8: Descuentos
-  Dado una fila de posgrado con uno o más descuentos marcados en las columnas 8 a 17
-  Cuando el sistema genera la solicitud
-  Entonces registra solo el descuento de mayor porcentaje según el mapa columna → exención de posgrado
-  Y si dos tienen el mismo porcentaje, registra el de la columna que aparece primero
+  Dado una fila de posgrado con descuentos marcados en las columnas 8 a 17
+  Cuando el sistema procesa la fila
+  Entonces, si hay uno, lo registra según el mapa columna → exención de posgrado
+  Y si hay más de uno, no sube ese estudiante y el motivo es "Solo se puede marcar un descuento además de la votación"
 
 Escenario 9: Votación marcada en posgrado
   Dado una fila de posgrado con la columna "10% votación" (columna 7) marcada
@@ -372,11 +399,12 @@ Escenario 9: Votación marcada en posgrado
   Entonces registra la votación una sola vez, aunque el descuento sea del 100%, como hoy
 
 Escenario 10: Votación automática en posgrado
-  Dado un estudiante de posgrado sin la columna 7 marcada
-  Y con certificado electoral activo en ACCERELECTORAL
-  Y sin descuento, o con un descuento registrado menor o igual a 90%
+  Dado una fila de posgrado sin la columna 7 marcada
+  Y con un descuento marcado de 90% o menos
+  Y el estudiante tiene certificado electoral activo en ACCERELECTORAL
   Cuando el sistema genera la solicitud
-  Entonces registra la votación una sola vez
+  Entonces registra la votación una sola vez, además del descuento
+  Y si la fila no tiene ninguna exención marcada, no registra la votación automática, como hoy
 
 Escenario 11: Conceptos
   Dado un estudiante de posgrado válido
@@ -386,21 +414,21 @@ Escenario 11: Conceptos
 ```
 
 - Reglas: los porcentajes por defecto, el plazo de 8 días y el mapa de exenciones vienen de los parámetros (US-15).
-- Cambios acordados: los porcentajes deben sumar 100 (P-5; hoy no se valida); descuentos no acumulables, se registra el de mayor porcentaje (P-3, P-12); validación estricta de fechas (Entorno técnico; hoy solo se revisa día ≤ 31 y mes ≤ 12). La regla de la votación no cambia (P-13), por eso en posgrado el total puede pasar de 100%, como hoy.
-- Supuesto: A9 (empate entre descuentos).
+- Cambios acordados: el número de cuotas es obligatorio y va de 1 a 3 (RE-03, RE-04; hoy la celda vacía genera 1 cuota); los porcentajes deben sumar 100 (P-5; hoy no se valida); con más de un descuento marcado la fila no se sube (C2; hoy se registran todos); validación estricta de fechas (Entorno técnico; hoy solo se revisa día ≤ 31 y mes ≤ 12). La votación marcada se registra con cualquier descuento, como hoy en posgrado, así que el total puede pasar de 100%; la automática no cambia (C1, A14).
+- Supuesto: A14 (tope de la votación automática), en revisión por C6 y C7 (2026-11-25). Con un descuento de 100%, la votación del escenario 9 deja la matrícula negativa en "Solicitados" (RE-23).
 - Para desbloquear: origen de los festivos y si sábados y domingos cuentan (D5, DBA/OATI); plantilla SMLV para esa variante (D2).
 - Puntos por confirmar: `[P-6]`.
 
 ### US-09 — Cancelar solicitudes anteriores sin imprimir
-- **Estado:** ✅ Lista · **Prioridad:** Must · **Trazabilidad:** RF-08 · IN-4
-- **Historia:** Como profesional de ARC, quiero que al generar una nueva solicitud se cancelen las anteriores del mismo estudiante que no se imprimieron en el periodo vigente, para que solo quede vigente la más reciente.
+- **Estado:** 🔒 Borrador — bloqueada (**C8**: ¿se cancelan también las solicitudes sin imprimir de periodos anteriores? RE-26) · **Prioridad:** Must · **Trazabilidad:** RF-08 · IN-4
+- **Historia:** Como profesional de ARC, quiero que cada vez que cargo un estudiante, se genere o no su solicitud nueva, se cancelen sus solicitudes anteriores sin imprimir del periodo vigente, para que solo quede lo que resulte de la última carga.
 
 ```text
 Escenario 1: Solicitud anterior sin imprimir del periodo vigente
   Dado un estudiante con una solicitud anterior en estado 0 (sin imprimir) del periodo vigente
   Cuando el sistema genera su nueva solicitud
   Entonces la anterior pasa a estado 2 (cancelada)
-  Y la cancelación y la nueva solicitud se guardan en la misma transacción (US-10)
+  Y la cancelación se guarda en su propia transacción, antes de la solicitud nueva (US-10)
 
 Escenario 2: Solicitud anterior ya impresa
   Dado un estudiante con una solicitud anterior en un estado distinto de 0
@@ -408,18 +436,26 @@ Escenario 2: Solicitud anterior ya impresa
   Entonces no modifica esa solicitud
 
 Escenario 3: Estudiante rechazado
-  Dado un estudiante rechazado en la validación (US-06) o en la generación
+  Dado un estudiante rechazado por cualquier motivo en la validación (US-06) o en la generación
+  Y se conocen su proyecto curricular y su periodo vigente
   Cuando el sistema procesa la fila
-  Entonces no cancela ninguna de sus solicitudes anteriores
+  Entonces cancela igualmente sus solicitudes sin imprimir del periodo vigente
+  Y no crea una solicitud nueva
 
 Escenario 4: Solicitud sin imprimir de otro periodo
   Dado un estudiante con una solicitud en estado 0 de un periodo anterior
   Cuando el sistema genera su nueva solicitud
   Entonces no modifica esa solicitud
+
+Escenario 5: Periodo desconocido
+  Dado una fila rechazada por código inválido, estudiante no encontrado o proyecto curricular sin periodo vigente
+  Cuando el sistema procesa la fila
+  Entonces no cancela ninguna solicitud, porque no se sabe cuál es el periodo vigente (A12)
 ```
 
 - Reglas: el periodo vigente es el año y periodo del proyecto curricular del estudiante, los mismos de la nueva solicitud (evento 80). Las pruebas en paralelo con el sistema PHP se hacen sobre una base de datos de pruebas dedicada (OQ-B-5), así que esta regla nunca cancela solicitudes de producción.
 - Cambio acordado (P-7): hoy el PHP cancela las solicitudes sin imprimir del estudiante en todos los periodos.
+- Cambio acordado (RE-02): hoy los rechazados por estado, valor de matrícula o proyecto curricular no cancelan nada; los rechazados por terminación de materias, fechas o error al guardar sí, como en el sistema nuevo.
 - Dependencias técnicas: DDL real de `solicitudRecibo` (D4).
 
 ### US-10 — Guardar cada solicitud completa o no guardarla
@@ -430,13 +466,14 @@ Escenario 4: Solicitud sin imprimir de otro periodo
 Escenario 1: Guardado exitoso
   Dado un estudiante válido con su solicitud calculada
   Cuando el sistema la guarda
-  Entonces en una sola transacción cancela las anteriores sin imprimir del periodo vigente (US-09)
-  Y escribe solicitudRecibo, solicitudCuota, solicitudExencion y solicitudConcepto
+  Entonces antes cancela, en su propia transacción, las anteriores sin imprimir del periodo vigente (US-09)
+  Y después escribe en una sola transacción solicitudRecibo, solicitudCuota, solicitudExencion y solicitudConcepto
 
 Escenario 2: Falla a mitad del guardado
   Dado que falla la escritura de cualquiera de esas tablas para un estudiante
   Cuando el sistema detecta el error
-  Entonces revierte la transacción completa de ese estudiante, incluida la cancelación
+  Entonces revierte la transacción de la solicitud nueva
+  Y mantiene la cancelación de las anteriores (RE-02)
   Y lo marca como rechazado con el motivo "Error al guardar la solicitud"
   Y continúa con el siguiente estudiante
 
@@ -444,13 +481,19 @@ Escenario 3: Verificación posterior
   Dado un lote procesado
   Cuando se consultan las solicitudes del lote
   Entonces no existe ninguna solicitud sin cuotas o sin conceptos
+
+Escenario 4: Falla la cancelación
+  Dado que falla la cancelación de las solicitudes anteriores de un estudiante válido
+  Cuando el sistema detecta el error
+  Entonces no escribe la solicitud nueva
+  Y lo marca como rechazado con el motivo "Error al guardar la solicitud"
 ```
 
 - Reglas: el detalle técnico del error queda en el log; el motivo mostrado al usuario no expone SQL ni datos internos.
 - Dependencias técnicas: DDL real (D4).
 
 ### US-11 — Entregar las solicitudes a "Solicitados"
-- **Estado:** 🔒 Borrador — bloqueada (**D3** acotada: valor de `cuota` en pregrado y demás estados, OQ-B-4; **D4**: DDL real y modelo aprobado, OQ-T-9)
+- **Estado:** 🔒 Borrador — bloqueada (**D4**: DDL real y modelo aprobado, OQ-T-9). D3 quedó resuelta el 2026-11-25 con el código de "Solicitados" (RE-21, A15)
 - **Prioridad:** Must · **Trazabilidad:** RF-16, RF-04 CA1 · IN-10
 - **Historia:** Como profesional de ARC, quiero que las solicitudes generadas por el sistema nuevo aparezcan en "Solicitados" igual que las del sistema actual, para imprimir los recibos sin cambiar ese módulo.
 
@@ -469,7 +512,7 @@ Escenario 2: Mismos registros que el sistema actual
   Y solicitudExencion y solicitudConcepto tienen id_solicitud y el id de la exención o del concepto
   Y las fechas están como timestamp Unix y los porcentajes entre 0 y 100
   Y la solicitud nueva queda en estado 0 y las canceladas en estado 2
-  Y en pregrado el campo cuota de solicitudRecibo vale [PENDIENTE D3] (hoy depende, por el defecto, de la columna "Seguro Estudiantil": 0, 1 o 2)
+  Y el campo cuota de solicitudRecibo vale 1 en pregrado y el número de cuotas en posgrado (A15; hoy en pregrado depende, por el defecto, de la columna "Seguro Estudiantil")
 
 Escenario 3: Estructura sin cambios
   Dado las tablas solicitud*, exencion y fechaPagoFacultad
@@ -477,8 +520,8 @@ Escenario 3: Estructura sin cambios
   Entonces su estructura es la misma que antes [PENDIENTE D4: DDL de referencia]
 ```
 
-- Reglas: `id_usuario` = documento de identidad del usuario (claim `documento` de WSO2, A8); `unidad` = créditos o SMLV en posgrado y vacía en pregrado, como hoy; `fecha` = momento de creación; `tipoPlantilla` = 1, 2 o 3.
-- Para desbloquear: valor de `cuota` en pregrado y demás estados (D3: DBA, dueño o código de "Solicitados"); DDL real (D4: DBA).
+- Reglas: `id_usuario` = documento de identidad del usuario (claim `documento` de WSO2, A8); `unidad` = créditos o SMLV en posgrado y `0` en pregrado, como hoy (RE-07, confirmado el 2026-11-25); `fecha` = momento de creación; `tipoPlantilla` = 1, 2 o 3. "Solicitados" lee solo el estado 0, recalcula los valores con sus propias reglas y pasa la solicitud a estado 1 al generar (RE-20 a RE-22).
+- Para desbloquear: DDL real (D4: DBA).
 
 ---
 
@@ -486,14 +529,15 @@ Escenario 3: Estructura sin cambios
 
 ### US-12 — Ver el resumen del lote procesado
 - **Estado:** ✅ Lista · **Prioridad:** Must · **Trazabilidad:** RF-11 · IN-7
-- **Historia:** Como profesional de ARC, quiero ver al terminar la carga cuántos estudiantes se procesaron y cuáles se rechazaron con su motivo, para corregir los rechazados y volver a cargarlos.
+- **Historia:** Como profesional de ARC, quiero ver al terminar la carga qué estudiantes se subieron y cuáles no, con su motivo, para corregir los rechazados y volver a cargarlos.
 
 ```text
 Escenario 1: Lote con procesados y rechazados
   Dado que cargué un lote de N estudiantes
   Cuando termina el procesamiento (en la misma petición)
   Entonces veo el total de procesados y de rechazados
-  Y para cada rechazado veo su código, la fila y el motivo
+  Y para cada estudiante que se subió veo su código y su fila
+  Y para cada uno que no se subió veo su código, la fila y el motivo
 
 Escenario 2: Lote rechazado por formato
   Dado un lote rechazado en la validación de formato
@@ -508,11 +552,12 @@ Escenario 3: Coherencia con la base
   Y ningún estudiante rechazado tiene una solicitud nueva
 ```
 
-- Reglas: la pantalla muestra solo los datos necesarios para corregir (código, fila, motivo) y usa el escape por defecto de Angular. El resumen no se guarda: solo se ve al terminar la carga (ver US-13).
+- Reglas: la pantalla muestra solo código, fila y, en los que no se subieron, el motivo (pedido del usuario del 2026-11-25; el PHP actual también lista los códigos procesados) y usa el escape por defecto de Angular. El resumen no se guarda: solo se ve al terminar la carga (ver US-13).
 - Puntos por confirmar: `[P-10]` exportar los rechazados.
 
 ### US-13 — Consultar el historial de lotes
 - **Estado:** ✅ Lista · **Prioridad:** Must · **Trazabilidad:** RF-12 · IN-8
+- **Funcionalidad nueva:** no existe en el sistema actual; el usuario la confirmó el 2026-11-25 (`requirements.md` §12.7)
 - **Historia:** Como profesional de ARC, quiero consultar los lotes cargados, para saber quién cargó cada archivo, cuándo y desde qué IP.
 
 ```text
@@ -532,6 +577,7 @@ Escenario 2: Lotes rechazados por formato
 
 ### US-14 — Registrar la auditoría de cada petición
 - **Estado:** ✅ Lista · **Prioridad:** Must · **Trazabilidad:** RF-13 · IN-8 · Actor: Seguridad
+- **Funcionalidad nueva:** no existe en el sistema actual; el usuario la confirmó el 2026-11-25 (`requirements.md` §12.7)
 - **Historia:** Como integrante de Seguridad, quiero un log de auditoría de cada petición al backend, para rastrear quién hizo qué y desde dónde sin exponer datos personales.
 
 ```text
@@ -626,14 +672,15 @@ Todos los RF tienen al menos una historia. Los RNF (cabeceras, secretos, health 
 
 | Bloqueo | Historias bloqueadas | Responsable |
 |---|---|---|
-| D1 Plantilla pregrado 13 columnas | US-03 | ARC |
+| D1 Plantilla de pregrado sin Reingreso y con las fechas de pago (C3) | US-03, US-07 | ARC |
 | D2 Plantilla posgrado SMLV | US-05 (y la variante SMLV de US-08) | ARC |
-| D3 Valor de `cuota` en pregrado y demás estados (acotada) | US-11 | DBA / dueño de "Solicitados" |
+| D3 ~~Valor de `cuota` en pregrado y demás estados~~ resuelta el 2026-11-25 (RE-21, A15) | — | — |
 | D4 DDL real y modelo aprobado | US-11 (dependencia técnica en US-09, US-10) | DBA |
 | D5 Origen de los festivos y si sábados y domingos cuentan (acotada) | US-08 | DBA / OATI |
 | D6 Campo del valor de cada regla e ids por ambiente (acotada) | Ninguna (dependencia técnica en US-06, US-07, US-08, US-15) | Usuario / OATI |
 | D10 Crear los parámetros de las reglas en "parametros" | Ninguna (dependencia técnica en US-15; sin ellos no se procesa ningún lote en test) | OATI / ARC |
 | D7 SSM, logs, S3 | Ninguna (dependencia técnica en US-02, US-14) | Infraestructura / Seguridad |
+| D13 Proxies de confianza para la IP | Ninguna (dependencia técnica en US-02, US-14) | Infraestructura / Arquitectura |
 
 ---
 
@@ -646,15 +693,15 @@ Todos los RF tienen al menos una historia. Los RNF (cabeceras, secretos, health 
 | P-3 | Votación y descuentos | US-07, US-08 | **Resuelto (usuario):** los descuentos no son acumulables; la votación es la única acumulable y se registra una sola vez. Abre P-12 y P-13 |
 | P-4 | ¿Qué representa el concepto 19? | US-07 | **Resuelto (código):** se graba siempre en pregrado; se conserva. Su nombre se documenta con el contrato de "parametros" |
 | P-5 | ¿Los porcentajes de posgrado deben sumar 100? | US-08 | **Resuelto (usuario):** sí. Un porcentaje vacío toma el valor por defecto de su posición, como hoy |
-| P-6 | ¿Se valida el valor de la columna 2 (créditos o SMLV)? | US-08 | Pendiente (U1 Functional Design). Hoy no se valida. Propuesta: numérico mayor que 0 |
-| P-7 | ¿La cancelación aplica a todos los periodos o solo al vigente? | US-09 | **Resuelto (usuario):** solo al vigente. Cambio frente al sistema actual |
+| P-6 | ¿Se valida el valor de la columna 2 (créditos o SMLV)? | US-08 | Pendiente (U1 Functional Design). Hoy no se valida. Propuesta: numérico mayor que 0, porque "Solicitados" calcula el valor bruto de posgrado con ese número y con 0 o vacío el recibo sale en 0 (RE-22) |
+| P-7 | ¿La cancelación aplica a todos los periodos o solo al vigente? | US-09 | **Resuelto (usuario):** solo al vigente. Cambio frente al sistema actual. **En revisión (C8, 2026-11-25):** "Solicitados" deja generar en el periodo vigente las solicitudes viejas que no se cancelan (RE-26) |
 | P-8 | ¿El estado H se acepta con terminación de materias? | US-06 | **Resuelto (código):** H no está en la lista de permitidos y hoy se rechaza antes; se conserva |
 | P-9 | ¿Se registran los lotes rechazados? ¿Dónde quedan los totales? | US-02, US-13 | **Resuelto (código):** el lote se registra al cargarse, antes de validar; `solicitudLote` no tiene columnas para totales |
 | P-10 | ¿ARC necesita exportar la lista de rechazados? | US-12 | Pendiente (U1 Functional Design). Propuesta: no en el MVP (no está en la lista IN) |
 | P-11 | ¿`recibos_service` actualiza reglas en "parametros"? | US-15 | **Resuelto (usuario):** solo consulta |
-| P-12 | Si una fila trae dos o más descuentos marcados, ¿qué hace el sistema? | US-07, US-08 | **Resuelto (usuario):** se registra solo el de mayor porcentaje; en empate, el de la columna que aparece primero (A9) |
-| P-13 | ¿El tope de la votación (descuento ≤ 90%) aplica también a la votación marcada y en las dos plantillas? | US-07, US-08 | **Resuelto (usuario):** se conserva la regla actual, incluida la diferencia entre pregrado y posgrado |
-| P-14 | ¿El resumen del lote debe avisar cuando se descartó un descuento por no ser acumulable? | US-07, US-08, US-12 | Pendiente (U1 Functional Design). Propuesta: no en el MVP (IN-7 pide procesados y rechazados con motivo) |
+| P-12 | Si una fila trae dos o más descuentos marcados, ¿qué hace el sistema? | US-07, US-08 | **Reemplazado (C2, 2026-11-25):** la fila no se sube y el resumen da el motivo. Antes (2026-11-24): se registraba solo el de mayor porcentaje (A9, que ya no aplica) |
+| P-13 | ¿El tope de la votación (descuento ≤ 90%) aplica también a la votación marcada y en las dos plantillas? | US-07, US-08 | **Cambiado (C2 y C1, 2026-11-25):** la votación marcada se registra con cualquier descuento en las dos plantillas; la automática conserva el tope de 90% (A14) y no aplica a filas sin exenciones marcadas |
+| P-14 | ¿El resumen del lote debe avisar cuando se descartó un descuento por no ser acumulable? | US-07, US-08, US-12 | **Ya no aplica (C2, 2026-11-25):** ningún descuento se descarta; la fila con más de uno no se sube y el resumen da el motivo |
 | P-15 | ¿Los porcentajes de las exenciones y las fechas por facultad se leen de "parametros" o de las tablas MySQL actuales (`exencion`, `fechaPagoFacultad`)? | US-07, US-08, US-15 | **Resuelto (usuario):** todo de "parametros" (a). Si un porcentaje cambia, se cambia también en la tabla `exencion` que usa "Solicitados" |
 
 ---
@@ -684,3 +731,23 @@ Todos los RF tienen al menos una historia. Los RNF (cabeceras, secretos, health 
 | Todas las reglas salen de "parametros", incluidos los porcentajes de exención y las fechas por facultad | Decisión P-15 (a) | US-07, US-08, US-15 |
 | Escenario 5 nuevo en US-15: regla inexistente, inactiva o con valor inválido | Ejemplo de respuesta del usuario y AD-22, aprobado 2026-11-24 | US-15 |
 | El token se valida en cada petición, sin caché de 60 minutos | Extensión de seguridad (SECURITY-08), Units Generation, pendiente de aprobación | US-01 |
+| Un estudiante rechazado por cualquier motivo pierde sus solicitudes sin imprimir del periodo vigente; la cancelación va en su propia transacción y se mantiene si falla la solicitud nueva | Usuario, Reverse Engineering (RE-02), 2026-11-25 | US-06, US-09, US-10 |
+| Posgrado: número de cuotas obligatorio, de 1 a 3; la fila que no cumple no se sube | Usuario (RE-03, RE-04), 2026-11-25 | US-08 |
+| Proyecto sin periodo vigente: la fila no se sube y el mensaje pide reportarlo al área de sistemas | Usuario (RE-05), 2026-11-25 | US-06 |
+| Facultad sin fechas de pago: la fila no se sube (escenario 11) | Usuario (RE-06), 2026-11-25 | US-07 |
+| `unidad` = `0` en pregrado | Usuario (RE-07), 2026-11-25 | US-11 |
+| La IP se toma de `X-Forwarded-For` con el último proxy de confianza | Usuario (RE-13), 2026-11-25 | US-02 |
+| El resumen lista también los estudiantes que se subieron | Usuario, 2026-11-25 | US-12 |
+| US-13 y US-14 se marcan como funcionalidades nuevas | Usuario, 2026-11-25 | US-13, US-14 |
+| ARC corresponde al nivel 132; `admin_consultasCoordinador` es su módulo de notas (mal nombrado) y queda para la Fase 2 (C5) | Usuario y código (RE-19), 2026-11-25 | US-01, personas |
+| Escenario 8 de US-06: más de un periodo vigente se trata como sin periodo (A13) | Código del módulo de notas (RE-18), 2026-11-25 | US-06 |
+| Más de un descuento marcado: la fila no se sube (reemplaza P-12 y A9); la votación marcada se registra con cualquier descuento, también en pregrado con las columnas 8 a 13 | Usuario (C2), 2026-11-25 | US-07, US-08 |
+| Sin exenciones marcadas no hay votación automática, como hoy; la automática conserva el tope de 90% (A14) | Usuario (C1), 2026-11-25 | US-07, US-08 |
+| Las fechas de pregrado vienen de la plantilla; la columna de terminación de materias ya no cambia las fechas; US-07 queda bloqueada por D1 | Usuario (C3), 2026-11-25 | US-03, US-07 |
+| P-14 ya no aplica | Consecuencia de C2 | US-12 |
+| El módulo de notas de ARC queda para la Fase 2 | Usuario (C5), 2026-11-25 | — |
+| US-07 vuelve a bloqueada (C1, C2, C3) y US-08 suma C1 y C2 | Respuesta del usuario a RE-01 y RE-06, con preguntas abiertas | US-07, US-08 |
+| D3 resuelta con el código de "Solicitados": `cuota` = 1 en pregrado (A15); US-11 queda bloqueada solo por D4 | Código de `admin_solicitudCoordinador` (RE-21), 2026-11-25 | US-11 |
+| La respuesta del usuario sobre A14 (votación automática siempre que el estudiante esté en ACCERELECTORAL) queda en revisión por C6 y C7; US-07 y US-08 suman C6 y C7 | Usuario y código de "Solicitados" (RE-23), 2026-11-25 | US-07, US-08 |
+| US-09 queda bloqueada por C8 (cancelación de periodos anteriores) | Código de "Solicitados" (RE-26), 2026-11-25 | US-09 |
+| P-6: con `unidad` vacía o en 0, el recibo de posgrado sale en 0 | Código de "Solicitados" (RE-22), 2026-11-25 | US-08 |

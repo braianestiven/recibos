@@ -10,19 +10,20 @@ Historias: US-02 a US-12, US-15. Todo ocurre en la misma petición (C-2).
 | 2 | Controller | El campo `archivo` existe (400); el nombre original no pasa de la longitud de la columna `nombreOriginal` (D4) y no lleva rutas ni caracteres de control (400, SECURITY-05); el tamaño no pasa del máximo (413, `MAX_CONTENT_LENGTH`); la extensión es `.xls` y los primeros bytes son la firma OLE2 `D0 CF 11 E0 A1 B1 1A E1` (415) | No se guarda ni se registra nada |
 | 3 | `FuenteReglas.obtener` | Lee las reglas en "parametros": una llamada `GET /v1/parametro/{id}` por regla. Valida el sobre, que `Data.Id` sea el pedido y que `Data.Activo` sea verdadero, y convierte el valor (AD-21) | 503 si no responde; 502 si la regla no existe, está inactiva o su valor no se puede convertir, con el nombre de la regla en el mensaje. No se registra nada |
 | 4 | `AlmacenamientoArchivos.guardar` | Guarda el archivo con nombre interno `lotes/{aaaa}/{mm}/{uuid4}.xls` | 503 |
-| 5 | `RepositorioSolicitudes.registrar_lote` | Inserta en `solicitudLote` (documento, nombre original, nombre interno, IP, fecha) | 503. El archivo queda en S3 y lo elimina la política de retención |
+| 5 | `RepositorioSolicitudes.registrar_lote` | Inserta en `solicitudLote` (documento, nombre original, nombre interno, IP según AD-29, fecha) | 503. El archivo queda en S3 y lo elimina la política de retención |
 | 6 | `LectorPlantilla.leer` + `plantillas` | Lee la hoja, identifica el tipo y valida el formato | 422 con `id_lote` y el motivo. El lote queda registrado (P-9) |
 | 7 | `plantillas.extraer_filas` | Filas desde la fila inicial; omite las que no tienen código | — |
 | 8 | Caso de uso | Si hay más filas que el máximo, `[PENDIENTE P-1]`; propuesta: 422 sin procesar ninguna | — |
 | 9 | `validacion_filas.validar_codigo` | Separa los códigos válidos de los inválidos | El inválido queda como rechazo de esa fila |
 | 10 | `RepositorioAcademico` | Tres lecturas en bloque: estudiantes, contextos de los proyectos curriculares y certificados electorales | 503. Todavía no se escribió ninguna solicitud |
-| 11 | `FuenteFestivos` (solo posgrado) | Festivos desde la menor fecha ordinaria hasta la mayor más un margen | 503 |
+| 11 | `FuenteFestivos` (posgrado; en pregrado solo si la fecha extraordinaria se calcula, D1) | Festivos desde la menor fecha ordinaria hasta la mayor más un margen | 503 |
 | 12 | Dominio, fila por fila | `validacion_estudiante.validar`, y luego `generador_solicitud.generar` | Queda un rechazo con su motivo y sigue la fila siguiente |
-| 13 | `RepositorioSolicitudes.guardar_solicitud` | Una transacción por estudiante: cancela las solicitudes sin imprimir de su periodo e inserta recibo, cuotas, exenciones y conceptos | Se revierte todo lo de ese estudiante, queda `ERROR_GUARDADO` y sigue la fila siguiente (US-10) |
-| 14 | Controller | Devuelve `ResumenLote` | 201 |
+| 13 | `RepositorioSolicitudes.cancelar_sin_imprimir` | Cada fila con estudiante y periodo vigente conocidos, válida o rechazada (AD-30, A12): cancela en su propia transacción las solicitudes sin imprimir de ese periodo | Fila válida: no se inserta la nueva y queda `ERROR_GUARDADO`. Fila rechazada: conserva su motivo. Sigue la fila siguiente |
+| 14 | `RepositorioSolicitudes.guardar_solicitud` | Solo filas válidas: una transacción con recibo, cuotas, exenciones y conceptos | Se revierte la solicitud nueva y la cancelación se mantiene (RE-02); queda `ERROR_GUARDADO` y sigue la fila siguiente (US-10) |
+| 15 | Controller | Devuelve `ResumenLote` con los estudiantes que se subieron y los que no, con su motivo (RF-11 CA3) | 201 |
 
 Reglas de la orquestación:
-- Las filas se procesan en el orden de la plantilla. Si un código se repite, la fila siguiente cancela la solicitud de la anterior, como hoy (P-2 pendiente).
+- Las filas se procesan en el orden de la plantilla. Si un código se repite, la fila siguiente cancela la solicitud de la anterior, como hoy, aunque la fila siguiente se rechace (P-2 pendiente; AD-30).
 - Las tres lecturas de Oracle del paso 10 reemplazan las cerca de 5 consultas por estudiante que hace el PHP (AD-06). El resultado es el mismo.
 - El caso de uso no conoce HTTP, Flask ni SQL. Los códigos de respuesta los pone `middlewares/errores` a partir de los errores de aplicación.
 - Si MySQL se cae a mitad del lote, cada estudiante que falta queda como `ERROR_GUARDADO`. NFR Design decidirá si conviene cortar el lote después de varios fallos de conexión seguidos.

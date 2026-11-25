@@ -35,7 +35,7 @@ weboffice/
 - Utilidades: `subir_archivo.class.php`, `reader.class.php` (Spreadsheet_Excel_Reader), `encriptar.class.php`, `validacion_usu_wo.class.php`, `calendario.class.php`, `alerta.class.php`, `html.class.php`, `navegacion.class.php`
 - Presentación: `estilo/basico/tema.php`, `estilo.php`, `funciones.js`
 - El arreglo de configuración `$configuracion` (rutas, host, prefijo de tablas, credenciales)
-- Los módulos relacionados `admin_solicitud` ("Solicitados"), `admin_generados` y la generación o impresión del recibo
+- Los módulos relacionados `admin_generados` y la impresión del recibo. "Solicitados" (`admin_solicitudCoordinador`) se agregó al workspace el 2026-11-25 y se analizó en Reverse Engineering (RE-20 a RE-26 en `aidlc-docs/inception/reverse-engineering/story-code-traceability.md`)
 
 No hay `composer.json`, pruebas, configuración, esquema de BD, documentación ni historial de cambios.
 
@@ -63,7 +63,7 @@ No hay `composer.json`, pruebas, configuración, esquema de BD, documentación n
 | 4 | Coordinador | `coordinador` | Carreras donde es coordinador (`ACCRA.CRA_EMP_NRO_IDEN`) |
 | 110 | Asistente | `asistente` | Proyectos asignados (`validarUsu::consultarProyectosAsistente`) |
 | 114 | Secretario | `secretario` | Proyectos asignados |
-| 132 | (¿ORC / admisiones?) | `coordinador` | Todas las carreras activas |
+| 132 | Admisiones, Registro y Control ("ORC" en el código; confirmado por el usuario el 2026-11-25) | `coordinador` | Todas las carreras activas |
 
 ### Componente principal: `registro_lote_recibo` (carga masiva de solicitudes de recibo de pago)
 
@@ -87,7 +87,7 @@ Flujo:
 
 ### Otros componentes
 
-- `admin_consultasCoordinador`: listado de proyectos, control de notas parciales, histórico de notas y selección de periodo (solo Oracle). **No está relacionado con recibos.**
+- `admin_consultasCoordinador`: listado de proyectos, control de notas parciales, histórico de notas y selección de periodo (solo Oracle). **No está relacionado con recibos.** *Corrección del 2026-11-25:* es el módulo de notas de Admisiones, Registro y Control (nivel 132, "ORC"); el nombre dice "coordinador" por error. Detalle en `aidlc-docs/inception/reverse-engineering/story-code-traceability.md` (RE-18, RE-19).
 - `admin_historicoPorEstudiante`: formulario que consulta los recibos generados por estudiante a través del módulo `admin_generados`, que no está en el repo.
 
 ## 4. Bases de datos, servicios e integraciones
@@ -110,7 +110,7 @@ Flujo:
 **Seguridad**
 - R1. **Inyección SQL:** todas las sentencias se arman concatenando texto, y los valores numéricos van sin comillas (`est_cod=` + celda de Excel). No se sabe qué hace `verificar_variables`.
 - R2. **XSS:** valores de `$_REQUEST` (`tipoUser`, `nivel`, `nomcra`) se escriben en el HTML sin escaparlos.
-- R3. **Autorización controlable por el cliente:** en `admin_consultasCoordinador`, `tipoUser=132` viene de `$_REQUEST` y da acceso a todas las carreras.
+- R3. **Autorización controlable por el cliente:** en `admin_consultasCoordinador`, `tipoUser=132` viene de `$_REQUEST` y da acceso a todas las carreras. Como 132 es el nivel de Admisiones, Registro y Control (2026-11-25), cualquier usuario que envíe ese valor obtiene los permisos de ARC en ese módulo.
 - R4. **Carga de archivos:** permisos `0777`, solo se valida la extensión y se usa `set_time_limit(0)`.
 - R5. Se usan cuatro cuentas Oracle distintas; no se sabe dónde están las credenciales.
 

@@ -27,11 +27,11 @@ Este documento registra **restricciones** (qué se exige, permite y prohíbe). N
 
 | Lenguaje | Versión | Propósito | Justificación |
 |----------|---------|---------|-----------|
-| Python | 3.12 | Backend (`recibos_service`) | Decisión de negocio; lineamiento Flask de la OAS (L5); 3.8 citado en los lineamientos ya no tiene soporte (L9) |
+| Python | Última versión estable con soporte (hoy 3.14; la versión exacta se fija en U1 NFR Requirements). Antes: 3.12 | Backend (`recibos_service`) | Decisión del usuario del 2026-11-25 (aclaración C4 de Reverse Engineering): versiones actualizadas en todo el proyecto. Lineamiento Flask de la OAS (L5); 3.8 citado en los lineamientos ya no tiene soporte (L9) |
 | TypeScript | 5.x (la que exija la versión de Angular) | Frontend (`recibos_mf`), microcliente single-spa | Decisión de negocio; lineamientos de clientes (L14) |
 | SQL | Dialectos Oracle y MySQL | Consultas a Oracle académico (solo lectura) y a las tablas `solicitud*` | Se mantienen las bases actuales |
 
-Versiones de Angular y Node: pendientes (OQ-T-1).
+Versiones de Angular y Node: las últimas con soporte vigente (decisión del usuario del 2026-11-25, C4): Node LTS activa y Angular con soporte; se fijan en U2 NFR Requirements (OQ-T-1).
 
 ### Lenguajes permitidos
 

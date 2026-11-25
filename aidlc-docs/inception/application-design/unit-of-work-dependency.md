@@ -46,9 +46,9 @@ flowchart LR
 
 | Insumo | Unidad | Se necesita en | Quién |
 |---|---|---|---|
-| D1 Plantilla de pregrado de 13 columnas | U1 | Functional Design | ARC |
+| D1 Plantilla de pregrado sin Reingreso y con las fechas de pago (C3) | U1 | Functional Design | ARC |
 | D2 Plantilla de posgrado SMLV | U1 | Functional Design | ARC |
-| D3 Valor de `cuota` en pregrado y demás estados | U1 | Functional Design | DBA / dueño de "Solicitados" |
+| D3 ~~Valor de `cuota` en pregrado y demás estados~~ resuelta el 2026-11-25 (RE-21, A15) | U1 | — | — |
 | D4 DDL real, prefijo de tablas y llaves primarias | U1 | Code Generation | DBA |
 | D5 Origen de los festivos | U1 | Functional Design | DBA / OATI |
 | D6 Campo del valor de cada regla e ids por ambiente | U1 | Code Generation | Usuario / OATI |
@@ -58,9 +58,11 @@ flowchart LR
 | D10 Crear los parámetros en "parametros" | U1 | Antes de las pruebas en test | OATI / ARC |
 | D11 Origen de `recibos_mf` por ambiente (CORS) | U1, U2 | U1 Infrastructure Design | Arquitectura / infraestructura |
 | D12 Throttling en WSO2 AM | U1 | Infrastructure Design | Arquitectura |
+| D13 Proxies de confianza para la IP (AD-29) | U1 | Infrastructure Design | Infraestructura / Arquitectura |
 | OQ-T-1 Versiones de Angular, TypeScript y Node | U2 | NFR Requirements | Se verifica en `oas_cliente` |
-| Entorno para correr pruebas (no hay Python, Node ni Docker en esta máquina) | U1, U2 | Antes de U1 Code Generation | Usuario |
-| P-1, P-2, P-6, P-10, P-14 | U1 | Functional Design | Usuario / ARC |
+| Herramientas con las versiones vigentes (C4): Docker y Python 3.14 ya están; Node LTS con soporte antes de U2 | U1, U2 | Antes de U1 Code Generation | Usuario |
+| P-1, P-2, P-6, P-10 (P-14 ya no aplica, C2) | U1 | Functional Design | Usuario / ARC |
+| C6, C7, C8 (respuesta sobre A14 y hallazgos de "Solicitados") | U1 | Antes de Functional Design | Usuario |
 
 ## 4. Orden de despliegue en cada ambiente
 

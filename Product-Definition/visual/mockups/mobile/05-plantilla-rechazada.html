@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=390, initial-scale=1">
+  <title>Recibos por lote — Plantilla rechazada</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-slate-200 to-slate-300 text-slate-800 min-h-screen" style='font-family: "Open Sans", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;'>
+  <div class="bg-amber-200 text-amber-900 text-center py-1 text-sm font-medium">🎨 MAQUETA — no funcional · Generado por aidlc-discovery</div>
+
+  <div class="py-8 flex flex-col items-center gap-3">
+    <p class="text-xs text-slate-700">Vista móvil · 390 × 844</p>
+    <div class="w-[390px] h-[844px] bg-slate-50 rounded-[2.75rem] shadow-2xl ring-[10px] ring-slate-900 overflow-hidden flex flex-col relative">
+      <div class="h-7 bg-[#013960] text-white text-[11px] flex items-center justify-between px-7" aria-hidden="true"><span>9:41</span><span>▂▄▆ ▮</span></div>
+      <!-- Encabezado móvil: representa el root y el core institucionales (guía visual: sga_cliente_admisiones_mf) -->
+      <header class="bg-gradient-to-r from-[#013960] to-[#03678f] text-white px-4 py-3 flex items-center gap-3 shadow-md">
+        <span class="w-9 h-9 rounded-full bg-white/15 ring-1 ring-white/40 flex items-center justify-center text-sm font-bold">UD</span>
+        <div class="flex-1">
+          <p class="text-[10px] uppercase tracking-wider text-[#b3d1dd]">Universidad Distrital</p>
+          <p class="font-semibold text-sm leading-tight">Recibos por lote</p>
+        </div>
+        <span class="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></span>
+      </header>
+      <main class="flex-1 overflow-y-auto px-4 py-4">
+        <h1 class="text-lg font-bold text-[#013960] mb-3">Cargar lote</h1>
+        <section class="bg-white rounded-2xl shadow-sm ring-1 ring-slate-200 p-4 mb-3">
+        <div class="flex items-center gap-3 mb-4" aria-label="Pasos de la carga">
+          <span class="w-8 h-8 rounded-full bg-[#03678f] text-white text-sm font-semibold flex items-center justify-center ring-4 ring-[#b3d1dd]" aria-label="Paso 1 actual">1</span><span class="text-xs font-semibold text-[#013960]">Cargar plantilla</span>
+          <span class="flex-1 h-0.5 bg-slate-200"></span>
+          <span class="w-8 h-8 rounded-full bg-slate-200 text-slate-600 text-sm font-semibold flex items-center justify-center" aria-label="Paso 2 pendiente">2</span><span class="text-xs font-semibold text-slate-600">Reporte</span>
+        </div>
+          <p id="etiqueta-archivo" class="block text-xs font-semibold text-slate-800 mb-2">Archivo de la plantilla (.xls)</p>
+          <div class="rounded-2xl border-2 border-dashed border-[#81b3c7] bg-[#f7fbfd] p-5 text-center">
+            <span class="mx-auto mb-2 w-12 h-12 rounded-full bg-[#e1edf2] text-[#03678f] flex items-center justify-center"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6" aria-hidden="true"><path d="M12 15V4m0 0l-4 4m4-4l4 4"/><path d="M4 15v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg></span>
+            <p class="text-sm font-semibold text-slate-800">Toca para seleccionar la plantilla</p>
+            <p class="text-[11px] text-slate-600 mb-3">Solo archivos .xls</p>
+            <input id="archivo" type="file" accept=".xls" class="sr-only" aria-labelledby="etiqueta-archivo">
+            <label for="archivo" class="inline-flex items-center gap-2 cursor-pointer bg-white text-[#03678f] font-semibold text-xs px-4 py-2 rounded-lg ring-1 ring-[#81b3c7]"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4" aria-hidden="true"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8l-5-5z"/><path d="M14 3v5h5"/></svg>Seleccionar archivo</label>
+          </div>
+          <!-- fuente: api-contract.md (pregrado_2027_1.xls); tamaño inventado -->
+          <div class="mt-3 flex items-center gap-3 rounded-xl ring-1 ring-slate-200 p-2.5">
+            <span class="w-8 h-8 rounded-lg bg-[#dcfce7] text-[#15803d] flex items-center justify-center"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4" aria-hidden="true"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8l-5-5z"/><path d="M14 3v5h5"/></svg></span>
+            <span class="flex-1"><span class="block text-xs font-semibold">pregrado_2027_1.xls</span><span class="block text-[11px] text-slate-600">245 KB · listo</span></span>
+          </div>
+        </section>
+        <section class="bg-white rounded-2xl shadow-sm ring-1 ring-slate-200 p-4 mb-3">
+          <h2 class="text-xs font-semibold text-[#013960] mb-2">Plantillas vigentes</h2>
+          <!-- fuente: requirements.md RF-02 -->
+          <div class="flex flex-wrap gap-1.5"><span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 bg-[#e1edf2] text-[#013960] ring-[#b3d1dd]">Pregrado</span><span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 bg-[#e1edf2] text-[#013960] ring-[#b3d1dd]">Posgrado por créditos</span><span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 bg-[#e1edf2] text-[#013960] ring-[#b3d1dd]">Posgrado SMLV</span></div>
+        </section>
+        <section class="bg-white rounded-2xl shadow-sm ring-1 ring-slate-200 p-4 mb-3">
+          <h2 class="text-xs font-semibold text-[#013960] mb-2">Antes de cargar</h2>
+          <!-- fuente: requirements.md RF-01, RF-05 CA1 y CA2, RF-06 CA4 -->
+          <ul class="space-y-1.5"><li class="flex gap-2 text-xs text-slate-700"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 text-[#15803d] shrink-0" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9"/></svg><span>Hasta 1000 estudiantes y 10 MB por archivo.</span></li><li class="flex gap-2 text-xs text-slate-700"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 text-[#15803d] shrink-0" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9"/></svg><span>Cada fila trae sus fechas de pago.</span></li><li class="flex gap-2 text-xs text-slate-700"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 text-[#15803d] shrink-0" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9"/></svg><span>Un solo descuento por fila, además de la votación.</span></li><li class="flex gap-2 text-xs text-slate-700"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 text-[#15803d] shrink-0" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9"/></svg><span>En posgrado, de 1 a 3 cuotas.</span></li></ul>
+        </section>
+      </main>
+      <nav aria-label="Menú del módulo" class="bg-white border-t border-slate-200 grid grid-cols-3 text-[11px]">
+        <a href="01-inicio-modulo.html" class="flex flex-col items-center gap-0.5 py-2 text-slate-600"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg><span>Inicio</span><span class="w-1.5 h-1.5"></span></a>
+        <a href="02-cargar-lote.html" class="flex flex-col items-center gap-0.5 py-2 text-[#03678f] font-semibold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5" aria-hidden="true"><path d="M12 15V4m0 0l-4 4m4-4l4 4"/><path d="M4 15v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg><span>Cargar lote</span><span class="w-1.5 h-1.5 rounded-full bg-[#03678f]"></span></a>
+        <a href="04-historial-lotes.html" class="flex flex-col items-center gap-0.5 py-2 text-slate-600"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>Historial</span><span class="w-1.5 h-1.5"></span></a>
+      </nav>
+      <div class="absolute inset-0 bg-[rgba(30,41,59,0.55)] flex items-end z-10" role="dialog" aria-modal="true" aria-labelledby="titulo-alerta">
+        <div class="w-full bg-[#f0f4f8] rounded-t-3xl shadow-2xl p-6 pb-8 text-center">
+          <span class="mx-auto block w-10 h-1.5 rounded-full bg-slate-300 mb-5" aria-hidden="true"></span>
+          <span class="mx-auto mb-3 w-14 h-14 rounded-full bg-[#faf8e7] ring-4 ring-[#ece29d] text-[#8a7a10] flex items-center justify-center"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-7 h-7" aria-hidden="true"><path d="M12 3.5l9 16H3l9-16z"/><path d="M12 10v4.5M12 17.5h.01"/></svg></span>
+          <h2 id="titulo-alerta" class="text-2xl font-light text-[#282828] mb-2">No se procesó el lote</h2>
+          <!-- fuente: api-contract.md (respuesta 422) -->
+          <p class="text-sm text-black">La plantilla de pregrado no es la vigente: trae la columna Reingreso.</p>
+          <!-- fuente: requirements.md RF-12 CA2; historia US-12, escenario 2 -->
+          <p class="text-sm text-black mt-2">No se generó ninguna solicitud. El lote quedó en el historial con el número <b>1533</b>.</p>
+          <a href="02-cargar-lote.html" class="w-full inline-flex items-center justify-center mt-5 bg-[#145a95] text-white font-semibold px-5 py-2.5 rounded-lg shadow hover:bg-[#0e4882] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#145a95]">Cargar otra plantilla</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="text-xs text-slate-600 text-center py-5 mt-10 border-t border-slate-200">
+    <a href="../../user-journey.md" class="underline">Ver recorrido del usuario</a> ·
+    <a href="index.html" class="underline">Todas las pantallas</a> ·
+    <a href="../index.html" class="underline">Escritorio y móvil</a>
+  </footer>
+</body>
+</html>

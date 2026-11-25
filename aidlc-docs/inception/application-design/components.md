@@ -17,14 +17,14 @@ Las dependencias apuntan hacia adentro: `interfaces` → `application` → `doma
 
 | Componente | Responsabilidad | Historias |
 |---|---|---|
-| `modelos` | Entidades y objetos de valor: `TipoPlantilla`, `HojaPlantilla`, `FilaPlantilla`, `Usuario`, `Estudiante`, `Periodo`, `ContextoCarrera`, `FechasPago`, `Cuota`, `Solicitud`, `MotivoRechazo`, `Rechazo`, `ResumenLote`, `NuevoLote`, `Lote`, `Pagina` | Todas |
-| `reglas` | `ReglasLiquidacion`: todos los valores que llegan de "parametros" (estados, eventos, IDs de conceptos y exenciones, porcentajes, mapas columna → id, columnas que anulan la votación, umbral de votación, plazo de la fecha extraordinaria, fechas por facultad) | US-06 a US-08, US-15 |
+| `modelos` | Entidades y objetos de valor: `TipoPlantilla`, `HojaPlantilla`, `FilaPlantilla`, `Usuario`, `Estudiante`, `Periodo`, `ContextoCarrera`, `FechasPago`, `Cuota`, `Solicitud`, `MotivoRechazo`, `Rechazo`, `Procesado`, `ResumenLote`, `NuevoLote`, `Lote`, `Pagina` | Todas |
+| `reglas` | `ReglasLiquidacion`: todos los valores que llegan de "parametros" (estados, eventos, IDs de conceptos y exenciones, porcentajes, mapas columna → id, umbral de la votación automática, plazo de la fecha extraordinaria). Las fechas de pago vienen de la plantilla (C3) | US-06 a US-08, US-15 |
 | `plantillas` | Estructura de las tres plantillas (texto de A1, fila inicial, número de columnas, encabezados, rangos de columnas), identificación del tipo, validación de formato y extracción de filas | US-03, US-04, US-05 |
-| `validacion_filas` | Reglas de fila: código numérico; en posgrado, cuotas 1–3, fecha válida con año completo para cada cuota, porcentajes 0–100 y suma 100 | US-06, US-08 |
+| `validacion_filas` | Reglas de fila: código numérico; en posgrado, número de cuotas obligatorio de 1 a 3, fecha válida con año completo para cada cuota, porcentajes 0–100 y suma 100 | US-06, US-08 |
 | `validacion_estudiante` | Validaciones académicas en el orden actual: existencia, valor de matrícula, estado, proyecto activo, terminación de materias | US-06 |
 | `fechas` | Sumar días calendario y saltar festivos | US-08 |
-| `cuotas` | Cuota única de pregrado con las fechas de la facultad; cuotas de posgrado con porcentajes por defecto por posición | US-07, US-08 |
-| `exenciones` | Descuento de mayor porcentaje con desempate por columna (P-12, A9) y votación con la regla actual (P-13) | US-07, US-08 |
+| `cuotas` | Cuota única de pregrado con las fechas de la plantilla (C3); cuotas de posgrado con porcentajes por defecto por posición | US-07, US-08 |
+| `exenciones` | Como máximo un descuento más la votación; con más de un descuento la fila no se sube (C2); votación marcada con cualquier descuento; automática con tope de 90% y solo si hay un descuento marcado (C1, A14; en revisión por C6 y C7) | US-07, US-08 |
 | `conceptos` | Concepto de matrícula, concepto exclusivo de pregrado y conceptos marcados | US-07, US-08 |
 | `generador_solicitud` | Arma la `Solicitud` completa de un estudiante válido | US-07, US-08, US-11 |
 
@@ -46,7 +46,7 @@ Las dependencias apuntan hacia adentro: `interfaces` → `application` → `doma
 | `db/motores` | — | Motores SQLAlchemy de Oracle (`oracle+oracledb`, modo thin) y MySQL (`mysql+pymysql`), con TLS y pool de conexiones |
 | `db/captura_sql` | — | Listener `before_cursor_execute`: guarda el texto SQL (sin valores) en el contexto de la petición para la auditoría |
 | `oracle/repositorio_academico` | `RepositorioAcademico` | Consultas de solo lectura, en bloque, con parámetros enlazados |
-| `mysql/repositorio_solicitudes` | `RepositorioSolicitudes` | Registro y listado de `solicitudLote`; una transacción por solicitud (cancelación + inserciones) |
+| `mysql/repositorio_solicitudes` | `RepositorioSolicitudes` | Registro y listado de `solicitudLote`; cancelación de las sin imprimir en su propia transacción y una transacción por cada solicitud nueva (AD-30) |
 | `s3/almacenamiento_s3` | `AlmacenamientoArchivos` | Guarda el archivo en el bucket privado con cifrado del lado del servidor |
 | `xls/lector_xlrd` | `LectorPlantilla` | Lee el `.xls` en memoria con xlrd 2.x y devuelve solo las celdas con contenido |
 | `wso2/proveedor_identidad` | `ProveedorIdentidad` | Valida el token en `/oauth2/userinfo` con httpx en cada petición, sin caché (AD-09) |
@@ -78,7 +78,7 @@ Las dependencias apuntan hacia adentro: `interfaces` → `application` → `doma
 | `core/` | Lo que trae `oas_cliente`: entorno (URL base de la API), sesión y token del core (D9) | US-01 |
 | `shared/` | Mensajes de error, indicador de carga y lectura del sobre de respuesta | Todas |
 | `features/lotes/pages/carga-lote` | Selecciona el `.xls`, lo envía, bloquea un segundo envío mientras procesa y muestra el resumen | US-02, US-12 |
-| `features/lotes/components/resumen-lote` | Presentación: totales y tabla de rechazados (fila, código, motivo) | US-12 |
+| `features/lotes/components/resumen-lote` | Presentación: totales, tabla de los que se subieron (fila, código) y tabla de los que no (fila, código, motivo) | US-12 |
 | `features/lotes/pages/historial-lotes` | Tabla paginada de lotes (usuario, fecha, archivo, IP) | US-13 |
 | `features/lotes/services/lotes.service` | Único acceso a la API: `cargarLote`, `listarLotes` | US-02, US-12, US-13 |
 | `features/lotes/models` | Interfaces TypeScript del contrato (`api-contract.md`) | — |
