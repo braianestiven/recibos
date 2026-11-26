@@ -4,7 +4,7 @@
 - Fuente: `aidlc-docs/inception/requirements/requirements.md` (aprobado 2026-11-24)
 - Persona principal: Profesional de ARC (`personas.md`)
 - Decisiones de planificación: Q1-a (por capacidad), Q2-a (solo IN), **Q3-b (borradores bloqueados)**, Q4-a, Q5-a (Dado/Cuando/Entonces), Q6-a (español, Must)
-- Estado: **aprobadas 2026-11-24**. Actualizadas el mismo día con las decisiones P-3, P-5, P-7 y P-11 y con lo que muestra el código PHP actual (ver §Registro de cambios). Actualizadas el 2026-11-25 con las decisiones de Reverse Engineering y con el análisis de "Solicitados" (mismo registro; D3 resuelta; C6 = b, C7 = a y C8 = a, respondidas el mismo día), y con las respuestas F1 a F13 del diseño funcional de U1 (mismo registro)
+- Estado: **aprobadas 2026-11-24**. Actualizadas el mismo día con las decisiones P-3, P-5, P-7 y P-11 y con lo que muestra el código PHP actual (ver §Registro de cambios). Actualizadas el 2026-11-25 con las decisiones de Reverse Engineering y con el análisis de "Solicitados" (mismo registro; D3 resuelta; C6 = b, C7 = a y C8 = a, respondidas el mismo día), y con las respuestas F1 a F13 del diseño funcional de U1 (mismo registro), y con las decisiones de NFR Requirements de U1 (mismo registro), y con las respuestas de NFR Design de U1 (mismo registro)
 
 ## Convenciones
 
@@ -28,7 +28,7 @@
 | US-05 | Validar el formato de la plantilla de posgrado SMLV | E2 Carga | RF-02 | 🔒 Bloqueada (D2) |
 | US-06 | Validar cada estudiante contra Oracle académico | E3 Procesamiento | RF-03 | ✅ Lista |
 | US-07 | Generar solicitudes de pregrado | E3 Procesamiento | RF-04, RF-05, RF-06, RF-07 | 🔒 Bloqueada (D1) |
-| US-08 | Generar solicitudes de posgrado | E3 Procesamiento | RF-04, RF-05, RF-06, RF-07 | 🔒 Bloqueada (F14, F15; variante SMLV: D2) |
+| US-08 | Generar solicitudes de posgrado | E3 Procesamiento | RF-04, RF-05, RF-06, RF-07 | 🔒 Bloqueada (solo la variante SMLV: D2) |
 | US-09 | Cancelar solicitudes anteriores sin imprimir | E3 Procesamiento | RF-08 | ✅ Lista |
 | US-10 | Guardar cada solicitud completa o no guardarla | E3 Procesamiento | RF-10 | ✅ Lista |
 | US-11 | Entregar las solicitudes a "Solicitados" | E3 Procesamiento | RF-16, RF-04 | 🔒 Bloqueada (D4) |
@@ -88,7 +88,7 @@ Escenario 4: El cliente intenta enviar su propio rol o permisos
 Escenario 1: Archivo válido
   Dado que tengo el rol ARC
   Cuando subo un archivo .xls cuyo contenido real es BIFF (Excel 97-2003)
-  Y su tamaño no supera el máximo configurado (por defecto 10 MB)
+  Y su tamaño no supera el máximo de 2 MB (N7)
   Entonces el archivo se guarda en el bucket S3 privado y cifrado con un nombre interno generado por el sistema
   Y se registra el lote en solicitudLote con mi documento de identidad, el nombre original, el nombre interno, mi IP y la fecha (timestamp Unix)
   Y el sistema continúa con la validación de formato (US-03, US-04, US-05)
@@ -363,7 +363,7 @@ Escenario 13: Descuento y votación por encima de 100%
 - Para desbloquear: ARC entrega el archivo oficial de la plantilla de pregrado (D1).
 
 ### US-08 — Generar solicitudes de posgrado
-- **Estado:** 🔒 Borrador — bloqueada (**F14** y **F15**: la Secretaría de Educación frente a C6 y C7; la variante SMLV depende además de **D2**). C1 y C2 se resolvieron el 2026-11-25, y C6 y C7 el mismo día. D5 pasó a dependencia técnica con F9 y F10.
+- **Estado:** 🔒 Borrador — bloqueada (solo la variante SMLV, por **D2**). C1, C2, C6 y C7 se resolvieron el 2026-11-25, y F14 y F15 el mismo día. D5 pasó a dependencia técnica con F9 y F10.
 - **Prioridad:** Must · **Trazabilidad:** RF-04, RF-05 CA2–CA3, RF-06, RF-07 · IN-3
 - **Historia:** Como profesional de ARC, quiero que cada estudiante de posgrado reciba una solicitud con las cuotas, fechas y porcentajes indicados en la plantilla, para respetar los acuerdos de pago de cada programa.
 
@@ -445,14 +445,20 @@ Escenario 13: Votación, descuento y Secretaría de Educación
   Dado una fila de posgrado con la votación, un descuento y la Secretaría de Educación marcados
   Cuando el sistema genera la solicitud
   Entonces registra las tres exenciones, en el orden votación, descuento y Secretaría (F12, RE-24)
-  Y aplica C7 a la votación [PENDIENTE F14: si la Secretaría entra en la suma]
+  Y la Secretaría no entra en la suma de C7: si el descuento y la votación pasan de 100%, se quita la votación (F14)
+
+Escenario 14: Solo la Secretaría de Educación marcada
+  Dado una fila de posgrado con solo la Secretaría de Educación marcada
+  Y el estudiante tiene certificado electoral activo
+  Cuando el sistema genera la solicitud
+  Entonces registra la votación y la Secretaría, como hoy (F15)
 ```
 
 - Reglas: los porcentajes por defecto, el plazo de 8 días y el mapa de exenciones vienen de los parámetros (US-15); los porcentajes de las exenciones, de la tabla `exencion` (F11).
-- Cambios acordados: el número de cuotas es obligatorio y va de 1 a 3 (RE-03, RE-04; hoy la celda vacía genera 1 cuota); los porcentajes deben sumar 100 (P-5; hoy no se valida); con más de un descuento marcado la fila no se sube (C2; hoy se registran todos); validación estricta de fechas (Entorno técnico; hoy solo se revisa día ≤ 31 y mes ≤ 12). La votación marcada se registra con cualquier descuento mientras la suma no pase de 100%; si pasa, se registra solo el descuento (C7; hoy en posgrado se registran las dos). La votación automática da el mismo resultado que hoy (C1, C6, A14). Desde F6 y F7 (2026-11-25): la columna 2 es obligatoria y mayor que 0, los porcentajes de las cuotas son enteros, ninguna fecha ordinaria es anterior al día de la carga y cada cuota vence después de la anterior.
+- Cambios acordados: el número de cuotas es obligatorio y va de 1 a 3 (RE-03, RE-04; hoy la celda vacía genera 1 cuota); los porcentajes deben sumar 100 (P-5; hoy no se valida); con más de un descuento marcado la fila no se sube (C2; hoy se registran todos); validación estricta de fechas (Entorno técnico; hoy solo se revisa día ≤ 31 y mes ≤ 12). La votación marcada se registra con cualquier descuento mientras la suma no pase de 100%; si pasa, se registra solo el descuento (C7; hoy en posgrado se registran las dos). La votación automática da el mismo resultado que hoy (C1, C6, A14). Desde F6 y F7 (2026-11-25): la columna 2 es obligatoria y mayor que 0, los porcentajes de las cuotas son enteros, ninguna fecha ordinaria es anterior al día de la carga y cada cuota vence después de la anterior. Con la Secretaría y un descuento de más de 20%, la votación automática se agrega (F14; hoy no).
 - A14 quedó resuelto el 2026-11-25 con C6 y C7. La regla de C7 evita que "Solicitados" deje la matrícula negativa (RE-23).
-- Para desbloquear: respuestas a F14 y F15 (la Secretaría de Educación frente a C6 y C7); plantilla SMLV para esa variante (D2). D5 (identificar la tabla de festivos de weboffice) es una dependencia técnica desde F9 y F10.
-- Decisiones de U1 Functional Design (2026-11-25): F6 (P-6, escenario 12), F7 (escenario 7), F9 y F10 (escenario 5), F11 y F12 (escenarios 8 y 13).
+- Para desbloquear: plantilla SMLV para esa variante (D2). D5 (identificar la tabla de festivos de weboffice) es una dependencia técnica desde F9 y F10.
+- Decisiones de U1 Functional Design (2026-11-25): F6 (P-6, escenario 12), F7 (escenario 7), F9 y F10 (escenario 5), F11 y F12 (escenarios 8 y 13), F14 (escenario 13) y F15 (escenario 14). Reglas detalladas: BR-D01 a BR-X07 en `aidlc-docs/construction/recibos_service/functional-design/business-rules.md`.
 
 ### US-09 — Cancelar solicitudes anteriores sin imprimir
 - **Estado:** ✅ Lista (C8 se resolvió el 2026-11-25) · **Prioridad:** Must · **Trazabilidad:** RF-08 · IN-4
@@ -527,6 +533,13 @@ Escenario 4: Falla la cancelación
   Cuando el sistema detecta el error
   Entonces no escribe la solicitud nueva
   Y lo marca como rechazado con el motivo "Error al guardar la solicitud"
+Escenario 5: MySQL deja de responder a mitad del lote
+  Dado que fallan por la conexión con MySQL 5 estudiantes seguidos
+  Cuando el sistema detecta la quinta falla
+  Entonces deja de intentar con los estudiantes que faltan
+  Y los marca como rechazados con el motivo "Error al guardar la solicitud"
+  Y no cancela nada de esos estudiantes
+  Y responde con el reporte del lote
 ```
 
 - Reglas: el detalle técnico del error queda en el log; el motivo mostrado al usuario no expone SQL ni datos internos.
@@ -590,6 +603,13 @@ Escenario 3: Coherencia con la base
   Cuando se revisan las solicitudes escritas
   Entonces cada estudiante contado como procesado tiene una solicitud nueva en estado 0 con sus cuotas y conceptos
   Y ningún estudiante rechazado tiene una solicitud nueva
+
+Escenario 4: Lote que llega al límite de tiempo
+  Dado un lote que todavía tiene filas cuando el servicio llega a su límite propio de 90 segundos
+  Cuando termina la petición
+  Entonces veo el reporte con las filas que alcanzó a procesar
+  Y las filas que faltaban aparecen como no subidas con el motivo "No se alcanzó a procesar en el tiempo del lote; vuelva a cargar esta fila" (N3)
+  Y esas filas no cancelan solicitudes
 ```
 
 - Reglas: la pantalla muestra solo código, fila y, en los que no se subieron, el motivo (pedido del usuario del 2026-11-25; el PHP actual también lista los códigos procesados) y usa el escape por defecto de Angular. El resumen no se guarda: solo se ve al terminar la carga (ver US-13).
@@ -625,6 +645,7 @@ Escenario 1: Petición registrada
   Dado cualquier petición a /v1/* de recibos_service, exitosa o fallida (los health checks no se auditan, AD-11)
   Cuando termina
   Entonces se escribe un log JSON con app_name, agent, data, date, host, ip_user, method, path, query, schema, sql_statement, status, trace_id y user
+  Y trace_id lleva el identificador de la petición, el mismo de los registros de la aplicación (sin trazas de X-Ray en el MVP, N14)
 
 Escenario 2: Sin datos personales
   Dado una petición que procesa datos de estudiantes
@@ -665,7 +686,7 @@ Escenario 3: Servicio "parametros" no disponible
   Dado que "parametros" no responde o responde con error
   Cuando se intenta procesar un lote
   Entonces el lote no se procesa
-  Y el usuario ve un motivo claro (el tiempo de espera y los reintentos se fijan en NFR Design)
+  Y el usuario ve un motivo claro (cada consulta espera la respuesta hasta 3 s y se repite una vez si falla la conexión; todas juntas tienen 10 s como máximo)
 
 Escenario 4: Solo lectura
   Dado cualquier operación de recibos_service
@@ -798,3 +819,9 @@ Todos los RF tienen al menos una historia. Los RNF (cabeceras, secretos, health 
 | F4, F7 y F8: celdas con solo espacios, fechas vencidas o en desorden, y fecha ordinaria de pregrado con la extraordinaria calculada | Usuario (U1 Functional Design), 2026-11-25 | US-07, US-08 |
 | F6, F9, F10, F11 y F12: créditos o SMLV, festivos de la tabla de weboffice sin fines de semana, porcentajes de la tabla `exencion` y Secretaría de Educación fuera de C2; US-08 queda bloqueada por F14 y F15 en lugar de D5 | Usuario (U1 Functional Design), 2026-11-25 | US-08, US-15 |
 | F13: sin exportación en el MVP | Usuario (U1 Functional Design), 2026-11-25 | US-12 |
+| F14 = a y F15 = a: la Secretaría no entra en la suma de C7 y, sola, también permite la votación automática; US-08 queda bloqueada solo en la variante SMLV (D2) | Usuario (U1 Functional Design), 2026-11-25 | US-08 |
+| N3: un lote que llega al límite propio de 90 s responde con el reporte; las filas que faltan salen con `TIEMPO_AGOTADO` (escenario 4 de US-12) | Usuario (U1 NFR Requirements), 2026-11-25 | US-12 |
+| N7: archivo de 2 MB como máximo (escenario 1 de US-02) | Usuario (U1 NFR Requirements), 2026-11-25 | US-02 |
+| N14: sin trazas de X-Ray en el MVP; `trace_id` lleva el identificador de la petición (escenario 1 de US-14) | Usuario (U1 NFR Requirements), 2026-11-25 | US-14 |
+| N20: si MySQL falla por la conexión en 5 estudiantes seguidos, el lote deja de intentar y los que faltan salen con "Error al guardar la solicitud" (escenario 5 de US-10) | Usuario (U1 NFR Design), 2026-11-25 | US-10 |
+| Tiempos de espera y reintento de "parametros" (escenario 3 de US-15) | U1 NFR Design, 2026-11-25 | US-15 |

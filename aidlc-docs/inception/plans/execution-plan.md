@@ -25,8 +25,8 @@ Notas de método:
 | **U1 `recibos_service`** | | | |
 | Functional Design | Ejecutar | Completa | Reglas de cuotas, exenciones, conceptos, fechas y validaciones; mapeo a las tablas MySQL. Concentra la mayoría de las preguntas pendientes |
 | NFR Requirements | Ejecutar | Estándar | Lote síncrono de 1000 estudiantes (tiempos de espera), seguridad OAS, Ley 1581. El stack ya está fijado |
-| NFR Design | Ejecutar | Estándar | Middlewares de autenticación, cabeceras y auditoría; transacción por solicitud; caché del token |
-| Infrastructure Design | Ejecutar | Mínima | Especificación para el grupo de infraestructura: ECS, S3, SSM, CloudWatch Logs, X-Ray y tiempos de espera; `Dockerfile`, `docker-compose.yml`, `.drone.yml`. Sin CDK ni Terraform (fuera de alcance) |
+| NFR Design | Ejecutar | Estándar | Middlewares de autenticación, cabeceras y auditoría; transacción por solicitud; límite propio de 90 s (AD-31); bloqueo por estudiante (AD-32); workers, hilos y pools para 3 lotes a la vez; cadena de tiempos de espera. Sin caché del token (AD-09) |
+| Infrastructure Design | Ejecutar | Mínima | Especificación para el grupo de infraestructura: ECS, S3, SSM, CloudWatch Logs y tiempos de espera; dos tareas en producción, despliegue sin interrupción y alarmas 24/7 (N6); sin X-Ray en el MVP (N14); `Dockerfile`, `docker-compose.yml`, `.drone.yml`. Sin CDK ni Terraform (fuera de alcance) |
 | Code Generation | Ejecutar | — | Siempre. Incluye pruebas unitarias (≥80%; 100% en `app/domain/`) |
 | **U2 `recibos_mf`** | | | |
 | Functional Design | Ejecutar | Mínima | Tres vistas: carga, resumen e historial; estados de la pantalla |
@@ -92,11 +92,11 @@ flowchart LR
 | U1 Functional Design | D1: plantilla de pregrado sin Reingreso y con las fechas de pago (A1, fila inicial, encabezados y posición de las columnas de la fecha ordinaria; F8 fijó que la extraordinaria se calcula) | US-03, US-07 | ARC |
 | U1 Functional Design | D2: plantilla de posgrado SMLV | US-05 y variante SMLV de US-08 | ARC |
 | U1 Functional Design | ~~D3~~ resuelta el 2026-11-25 con el código de "Solicitados" (RE-21, A15). ~~C6, C7 y C8~~ respondidas el mismo día (C6 = b, C7 = a, C8 = a) | — | — |
-| U1 Functional Design | ~~P-1, P-2, P-6, P-10~~ resueltos el 2026-11-25 con F1, F2, F6 y F13, junto con F3 a F5 y F7 a F12. Siguen abiertas F14 y F15 (la Secretaría de Educación frente a C6 y C7) | US-08 | Usuario |
-| U1 Functional Design (entrega) | D10: lista de parámetros de las reglas para crear en "parametros" (dev y test) | US-15 | OATI / ARC los crean |
-| U1 NFR Requirements | Tiempo de respuesta objetivo para un lote de 1000 estudiantes (RNF-1) | — | Usuario |
-| U1 Infrastructure Design | D7: rutas SSM, destino y retención de logs (mínimo 90 días), tamaño máximo y retención en S3; D11: orígenes de CORS; D12: throttling en WSO2 AM; D13: número de proxies de confianza para la IP (AD-29); requisitos de AD-28 | — | Infraestructura / Seguridad / Arquitectura |
-| Antes de U1 Code Generation | Herramientas de la máquina: el usuario pidió usar las versiones vigentes (2026-11-25). Ya hay Docker 29 y Python 3.14; Node 18 se cambia por una LTS con soporte antes de U2. C4 = a: el proyecto usa la última versión estable de cada lenguaje | Build and Test | Usuario |
+| U1 Functional Design | ~~P-1, P-2, P-6, P-10~~ resueltos el 2026-11-25 con F1, F2, F6 y F13, junto con F3 a F5 y F7 a F12. F14 y F15 se respondieron el mismo día | — | — |
+| U1 Functional Design (entrega) | D10: lista de parámetros de las reglas para crear en "parametros" (dev y test); entregada en `construction/recibos_service/functional-design/business-rules.md` §11 | US-15 | OATI / ARC los crean |
+| U1 NFR Requirements | Tiempo de respuesta objetivo para un lote de 1000 estudiantes (RNF-1); se pregunta el 2026-11-25 como N2, junto con N1 y N3 a N13. Respondidas N1 a N17 el mismo día | — | Usuario |
+| U1 Infrastructure Design | D7: rutas SSM y destino de los logs (la retención de 365 días y el tamaño de 2 MB ya se decidieron, N7 y N8); D11: orígenes de CORS; D12: throttling en WSO2 AM; D13: número de proxies de confianza para la IP (AD-29); D14: TLS de Oracle y MySQL; D15: canal y turnos de las alarmas 24/7; requisitos de AD-28 | — | Infraestructura / Seguridad / Arquitectura |
+| Antes de U1 Code Generation | Herramientas de la máquina: el usuario pidió usar las versiones vigentes (2026-11-25). Ya hay Docker 29 y Python 3.14; Node 18 se cambia por una LTS con soporte antes de U2. C4 = a: el proyecto usa la última versión estable de cada lenguaje. N1 = a: instalar Python 3.15 en la máquina | Build and Test | Usuario |
 | U1 Code Generation | D4: DDL real, prefijo de las tablas y llaves primarias; D6 (acotada): campo del valor de cada regla, ids por ambiente, URL y autenticación; D8: identificador del rol ARC | US-09 a US-11 | DBA; usuario / OATI; Arquitectura |
 | U2 NFR Requirements | OQ-T-1: versiones de Angular, TypeScript y Node | — | Se verifican en `oas_cliente` (`feature/clientes_nuevos`) |
 

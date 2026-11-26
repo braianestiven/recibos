@@ -303,3 +303,9 @@ Do not rewrite this file. Use Read + Edit (append) only.
 **AI Action**: "existing-system-analysis.md: the related-modules bullet now says that 'Solicitados' is in the workspace as bloque/admin_solicitudCoordinador and was analyzed in Reverse Engineering (RE-20..RE-26). Full log in aidlc-docs/audit.md."
 **Context**: Product-Definition/interview/technical/existing-system-analysis.md
 ---
+## [Correction from AI-DLC Construction — U1 NFR Requirements]
+**Timestamp**: 2026-11-25T18:31:09Z
+**User Input**: "N1 a, N2 a, N3 a, N4 a, N5 a, N6 C, N7 a, N8 a, N9 a, N10 b, N11 a, N12 b, N13 a, ... ; n14 c, n15 a, n16 a, n17 b" (verbatim in aidlc-docs/audit.md)
+**AI Action**: "technical-environment.md: Python fixed at 3.15 (N1); flasgger removed from the mandatory frameworks by user decision (N12 = b; L41 still met with swagger/swagger.yml in Swagger 2.0 published in WSO2 AM); httpx replaced by requests (N11); aws-xray-sdk and X-Ray service not used in the MVP (N14 = c; SDK and daemon reach end of support on 2027-02-25); cachetools marked as not used (AD-26); Hypothesis, ruff and mypy added to the test tools and CI controls (N13). Full log in aidlc-docs/audit.md."
+**Context**: Product-Definition/technical-environment.md
+---

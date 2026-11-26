@@ -3,7 +3,7 @@
 - Etapa: CONSTRUCTION → U1 `recibos_service` → Functional Design, paso 5 de la regla (respuestas que chocan con otras decisiones)
 - Fecha: 2026-11-25T17:18:02Z
 - Origen: F12 = b (la Secretaría de Educación no cuenta como descuento). C1, C6 y C7 se decidieron cuando la Secretaría contaba como un descuento más, así que quedan dos puntos abiertos
-- Mientras no tengan respuesta, no se generan los artefactos de la etapa y US-08 queda bloqueada
+- Respondidas el 2026-11-25 ("f14 a, f15 a") y aplicadas a los requisitos, las historias, el diseño y los artefactos de la etapa
 - Puedes responder aquí, después de `[Answer]:`, o en el chat con el formato "f14 a, f15 a"
 
 ## Contexto
@@ -18,7 +18,7 @@ B) Sí: Secretaría + descuento + votación no pasan de 100%. Para la votación 
 
 C) Other (please describe after [Answer]: tag below)
 
-[Answer]: 
+[Answer]: A. Respuesta del usuario (2026-11-25): "f14 a". La Secretaría no entra en la suma de C7; la suma sigue siendo descuento + votación
 
 ### Aclaración F15
 Una fila de posgrado con solo la Secretaría marcada, sin votación ni otro descuento, de un estudiante con certificado electoral activo: ¿recibe la votación automática?
@@ -29,4 +29,4 @@ B) No: con F12 = b la Secretaría no es un descuento, y C6 dice que la votación
 
 C) Other (please describe after [Answer]: tag below)
 
-[Answer]: 
+[Answer]: A. Respuesta del usuario (2026-11-25): "f15 a". Una fila con solo la Secretaría marcada recibe la votación automática, como hoy

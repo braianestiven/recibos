@@ -104,7 +104,7 @@
     <h1>Mapa del flujo AI-DLC</h1>
     <p>Proyecto: Migración del módulo de recibos por lote (weboffice) — Brownfield.</p>
     <p class="meta">Fase actual: <b>CONSTRUCTION</b> · Profundidad: Comprehensive · Interacción: conversacional</p>
-    <p class="meta">Última actualización del mapa: <b>2026-11-25 12:18</b> (se refresca solo cada 5&nbsp;s)</p>
+    <p class="meta">Última actualización del mapa: <b>2026-11-25 16:33</b> (se refresca solo cada 5&nbsp;s)</p>
   </header>
 
   <div class="legend">
@@ -117,12 +117,12 @@
   <!-- Aquí estás: resumen -->
   <div class="here">
     <span class="tag">Estás aquí</span>
-    <h2>Construction → U1 recibos_service · Functional Design (faltan dos aclaraciones)</h2>
-    <div class="row"><b>Estado:</b> F1 a F13 están respondidas y aplicadas a requisitos, historias y diseño. F12 (la Secretaría de Educación no cuenta como descuento) abrió dos aclaraciones, F14 y F15, en aidlc-docs/construction/plans/recibos_service-functional-design-clarification-questions.md. Con esas respuestas se generan los artefactos del diseño funcional.</div>
-    <div class="row"><b>Agente activo:</b> Construction / Functional Design de U1.</div>
-    <div class="row"><b>Historias:</b> 10 listas y 5 bloqueadas (US-03 y US-07 por la plantilla de pregrado, US-05 por la de SMLV, US-08 por F14 y F15, US-11 por el DDL).</div>
+    <h2>Construction → U1 recibos_service · Code Generation (parte 2: generación del código)</h2>
+    <div class="row"><b>Estado:</b> el usuario aplazó el diseño de la infraestructura (25-11); se retoma antes del primer despliegue. El plan de 18 pasos se aprobó el 25-11 y el código se está escribiendo en recibos_service/. Según el plan (aidlc-docs/construction/plans/recibos_service-code-generation-plan.md), están terminados los pasos 1 y 3 a 6: entorno, reglas de negocio con sus pruebas, su resumen y casos de uso.</div>
+    <div class="row"><b>Agente activo:</b> Construction / Code Generation de U1, parte 2 (generación).</div>
+    <div class="row"><b>Historias:</b> 10 listas y 5 bloqueadas (US-03 y US-07 por la plantilla de pregrado, US-05 y la variante SMLV de US-08 por la plantilla SMLV, US-11 por el DDL).</div>
     <div class="row"><b>Extensiones (decididas el 24-11):</b> Security Baseline = Sí (todas las reglas SECURITY bloqueantes); Resiliency Baseline = No; Property-Based Testing = Parcial (bloqueantes PBT-02, PBT-03, PBT-07, PBT-08 y PBT-09; el resto orientativas).</div>
-    <div class="row"><b>Próxima acción:</b> responder F14 y F15; después se generan las entidades, las reglas y el modelo de lógica de U1, y se presenta su aprobación.</div>
+    <div class="row"><b>Próxima acción:</b> terminar los pasos que faltan del plan (pruebas de los casos de uso, API, adaptadores, documentación, artefactos de despliegue y verificación final) y presentar el código de U1 para su aprobación.</div>
   </div>
 
   <!-- FASE 1: IDEATION / DISCOVERY -->
@@ -209,8 +209,8 @@
     <ul class="steps">
       <li class="is-now">
         <span class="icon i-now">●</span>
-        <span class="body"><span class="name">U1 · recibos_service — estás aquí (Functional Design)</span>
-        <span class="desc">Diseño funcional en curso: F1 a F13 respondidas; faltan las aclaraciones F14 y F15. Después: NFR Requirements, NFR Design, Infrastructure Design y Code Generation.</span></span>
+        <span class="body"><span class="name">U1 · recibos_service — estás aquí (Code Generation)</span>
+        <span class="desc">Functional Design, NFR Requirements y NFR Design aprobados (25-11). Infrastructure Design aplazada por el usuario (25-11). Code Generation: plan aprobado (25-11); generación del código en curso.</span></span>
       </li>
       <li>
         <span class="icon i-pending">○</span>

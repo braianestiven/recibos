@@ -6,7 +6,7 @@
 - Fecha: 2026-11-24
 - Inputs: `Product-Definition/vision-document.md`, `Product-Definition/technical-environment.md`, `Product-Definition/open-questions.md`
 - Soporte: `Product-Definition/interview/technical/existing-system-analysis.md`, `.../templates-analysis.md`
-- Estado: **aprobado 2026-11-24**. Actualizado el mismo día con las decisiones de User Stories (P-3, P-5, P-7, P-11) y con evidencia del código PHP actual (ver §12). Actualizado el 2026-11-25 con las decisiones de Reverse Engineering (§12.6 y §12.7) y con el análisis de "Solicitados" (D3 resuelta, A15; C6 = b, C7 = a y C8 = a, respondidas el mismo día), y con las respuestas F1 a F13 del diseño funcional de U1 (§12.8)
+- Estado: **aprobado 2026-11-24**. Actualizado el mismo día con las decisiones de User Stories (P-3, P-5, P-7, P-11) y con evidencia del código PHP actual (ver §12). Actualizado el 2026-11-25 con las decisiones de Reverse Engineering (§12.6 y §12.7) y con el análisis de "Solicitados" (D3 resuelta, A15; C6 = b, C7 = a y C8 = a, respondidas el mismo día), y con las respuestas F1 a F13 del diseño funcional de U1 (§12.8), y con las decisiones de NFR Requirements de U1 (§12.9)
 
 > Límite de alcance (regla dura): solo la lista **"Funcionalidades IN"** de la Visión. Las
 > listas allow/deny del Entorno técnico son **restricciones**, no sugerencias. Nada fuera de
@@ -74,7 +74,7 @@ El usuario ARC sube un archivo de plantilla; el sistema lo almacena en S3 (priva
 nombre interno generado por el sistema) y registra el lote en `solicitudLote` (usuario, nombre
 original, IP, fecha).
 - CA1: solo se acepta `.xls` (BIFF binario), verificando el tipo real, no solo la extensión.
-- CA2: se rechaza el archivo que supere el tamaño máximo (OQ-T-10 → §5, por defecto 10 MB).
+- CA2: se rechaza el archivo que supere el tamaño máximo de 2 MB (N7, 2026-11-25; antes el supuesto A1 decía 10 MB).
 - CA3: el archivo original no queda en disco local del contenedor ni con permisos abiertos.
 - Origen: IN-1; deny de `documento/solicitudes/` local y `0777`; allow S3 privado.
 
@@ -120,8 +120,8 @@ conceptos, equivalente al sistema actual salvo las reglas acordadas (§4.A).
 ### RF-06 — Exenciones
 - CA1: se aplica el mapa **columna → id_exención** por tipo de plantilla (parametrizado, RF-09; hoy fijo en código).
 - CA2: pregrado **excluye "Reingreso"** (C-045558, `id_exencion 18`); la columna no existe en la plantilla de 13.
-- CA3: **Votación** (10%, `id_exencion 1`): es la única exención acumulable y se registra **una sola vez**, venga de la columna de la plantilla, de `ACCERELECTORAL` (certificado activo) o de ambas (decisión P-3). Reglas desde el 2026-11-25 (C1, C2, C6 y C7; cambian P-13): (a) la votación marcada se registra sola o con un descuento, en las dos plantillas; (b) si la votación no está marcada y la fila tiene un descuento marcado, se registra la votación cuando el estudiante tiene certificado activo en `ACCERELECTORAL` (respuesta del usuario sobre A14: "si no esta marcado en el archivo y si lo encuentras en la tabla ACCERELECTORAL aplica el descuento"); una fila sin ningún descuento marcado no recibe la votación automática, como hoy (C1, C6 = b); (c) **el descuento y la votación juntos no pasan de 100%**: si pasarían, se registra solo el descuento, en las dos plantillas y para la votación marcada o la automática (C7 = a), porque "Solicitados" dejaría la matrícula negativa (RE-23). Con la votación en 10%, la regla (c) da para la votación automática el mismo resultado que el tope actual de 90%. Para la votación marcada cambian dos casos frente a hoy: en pregrado, con un descuento de las columnas 8 a 13, hoy se quita siempre y ahora solo si la suma pasa de 100%; en posgrado hoy se registra siempre y ahora se quita si la suma pasa de 100%.
-- CA4: **Los descuentos no son acumulables** (decisión P-3): una solicitud lleva como máximo dos exenciones, la votación y un descuento (C2, 2026-11-25). Si la fila trae más de un descuento marcado, sin contar la votación, la fila **no se sube** y aparece en el resumen con el motivo `DESCUENTOS_NO_ACUMULABLES`. Reemplaza a P-12 (registrar el de mayor porcentaje) y al supuesto A9. Es un cambio frente al sistema actual, que registra todas las exenciones marcadas. **La Secretaría de Educación** (posgrado, columna 16, `id_exencion 16`) no cuenta como descuento para esta regla: una fila puede llevar la votación, un descuento y la Secretaría, como lo calcula hoy "Solicitados", que la aplica aparte, sobre el valor que queda (decisión F12, 2026-11-25). Las exenciones se guardan en este orden: votación, descuento y al final la Secretaría, porque "Solicitados" solo cuenta las dos primeras filas para la votación y el descuento (RE-24). Cómo entra la Secretaría en la suma de C7 y en la votación automática: aclaraciones F14 y F15, pendientes.
+- CA3: **Votación** (10%, `id_exencion 1`): es la única exención acumulable y se registra **una sola vez**, venga de la columna de la plantilla, de `ACCERELECTORAL` (certificado activo) o de ambas (decisión P-3). Reglas desde el 2026-11-25 (C1, C2, C6, C7, F14 y F15; cambian P-13): (a) la votación marcada se registra sola o con un descuento, en las dos plantillas; (b) si la votación no está marcada y la fila tiene marcado un descuento o, en posgrado, la Secretaría de Educación, se registra la votación cuando el estudiante tiene certificado activo en `ACCERELECTORAL` (respuesta del usuario sobre A14; C6; F15 = a, como hoy); una fila sin ninguna exención marcada no recibe la votación automática, como hoy (C1); (c) **el descuento y la votación juntos no pasan de 100%**: si pasarían, se registra solo el descuento, en las dos plantillas y para la votación marcada o la automática (C7 = a), porque "Solicitados" dejaría la matrícula negativa (RE-23). La Secretaría no entra en esa suma, porque "Solicitados" la aplica sobre el valor que queda (F14 = a). Con la votación en 10%, la regla (c) da para la votación automática el mismo resultado que el tope actual de 90%, salvo con la Secretaría y un descuento de más de 20%: hoy no se agrega y ahora sí (F14). Para la votación marcada cambian dos casos frente a hoy: en pregrado, con un descuento de las columnas 8 a 13, hoy se quita siempre y ahora solo si la suma pasa de 100%; en posgrado hoy se registra siempre y ahora se quita si la suma pasa de 100%. Reglas detalladas: BR-X01 a BR-X07 en `aidlc-docs/construction/recibos_service/functional-design/business-rules.md`.
+- CA4: **Los descuentos no son acumulables** (decisión P-3): una solicitud lleva como máximo dos exenciones, la votación y un descuento (C2, 2026-11-25). Si la fila trae más de un descuento marcado, sin contar la votación, la fila **no se sube** y aparece en el resumen con el motivo `DESCUENTOS_NO_ACUMULABLES`. Reemplaza a P-12 (registrar el de mayor porcentaje) y al supuesto A9. Es un cambio frente al sistema actual, que registra todas las exenciones marcadas. **La Secretaría de Educación** (posgrado, columna 16, `id_exencion 16`) no cuenta como descuento para esta regla: una fila puede llevar la votación, un descuento y la Secretaría, como lo calcula hoy "Solicitados", que la aplica aparte, sobre el valor que queda (decisión F12, 2026-11-25). Las exenciones se guardan en este orden: votación, descuento y al final la Secretaría, porque "Solicitados" solo cuenta las dos primeras filas para la votación y el descuento (RE-24). No entra en la suma de C7 (F14 = a) y, como cualquier exención marcada, permite la votación automática (F15 = a).
 - CA5: una columna de concepto o de exención está **marcada** si su celda tiene contenido distinto de espacios. Una celda con solo espacios no cuenta (decisión F4, 2026-11-25); hoy cuenta cualquier contenido (`isset` en `conceptoPlantilla` y `exencionPlantilla`).
 - CA6: el porcentaje de cada exención se lee de la tabla MySQL `exencion`, en solo lectura: son los mismos con los que cobra "Solicitados" (decisión F11, 2026-11-25). Revierte P-15 en este punto, y es como lo hace hoy el lote PHP. Si una exención del mapa no tiene porcentaje en la tabla, el lote no se procesa y el mensaje la nombra, como con una regla que falta (AD-22); hoy se omite sin aviso (RE-12).
 - Origen: IN-3; templates-analysis.md; "Reglas acordadas".
@@ -186,7 +186,8 @@ Cada petición genera un log JSON de auditoría con los campos del contrato `uti
 `app_name, agent, data, date, host, ip_user, method, path, query, schema, sql_statement, status,
 trace_id, user`.
 - CA1: `sql_statement` capturado **por petición**; `data` **sin datos personales** (Ley 1581).
-- CA2: logs **siempre habilitados**; destino CloudWatch Logs (OQ-T-5, §5).
+- CA2: logs **siempre habilitados**; destino CloudWatch Logs (OQ-T-5, §5), con retención de 365 días (N8).
+- CA3: `trace_id` lleva el identificador de la petición (`request_id`), el mismo de los registros de la aplicación. En el MVP no hay trazas de X-Ray (N14 = c, 2026-11-25).
 - Origen: IN-8; restricción de seguridad; contrato auditoría.
 
 ### RF-14 — Autenticación con WSO2
@@ -214,7 +215,7 @@ Resumen consolidado (fuente de verdad para las pruebas unitarias de `app/domain/
 1. Pregrado: 1 cuota 100%; la fecha ordinaria viene de la plantilla (C3, F8; posición de las columnas en D1) y la extraordinaria se calcula como en el punto 3; si faltan o son inválidas, la fila no se sube (RE-06); sin diferido; sin "Seguro" como cuota (`solicitudRecibo.cuota` = 1, A15); sin "Reingreso".
 2. Posgrado: número de cuotas obligatorio, de 1 a 3 (RE-03, RE-04), cada una con fecha válida en la plantilla (si falta, la fila no se sube, RE-06); un % vacío toma el valor por defecto de su posición (100 / 60-40 / 40-30-30); los porcentajes son enteros y la suma debe ser 100; la columna 2 (créditos o SMLV) es obligatoria y mayor que 0 (F6); ninguna fecha ordinaria es anterior al día de la carga y cada cuota vence después de la anterior (F7).
 3. Pregrado y posgrado: extraordinaria = ordinaria + 8 días calendario; si cae en festivo, se avanza al siguiente día no festivo. Festivos: los de la tabla que usa hoy weboffice (F9; el DBA la identifica, D5); un sábado o un domingo que no esté en ella no mueve la fecha (F10). *Corrige la primera versión de este documento, que decía "8 días hábiles".*
-4. Exenciones: como máximo un descuento más la votación; la fila con más de un descuento marcado no se sube (C2). La votación se registra una sola vez: la marcada, sola o con un descuento; la automática (`ACCERELECTORAL`), solo si la fila tiene un descuento marcado (C1, C6, A14). El descuento y la votación juntos no pasan de 100%: si pasarían, se registra solo el descuento (C7). Una columna está marcada si su celda tiene contenido distinto de espacios (F4). La Secretaría de Educación no cuenta como descuento para C2 (F12; F14 y F15 aclaran su lugar en C6 y C7). Los porcentajes de las exenciones salen de la tabla `exencion` (F11).
+4. Exenciones: como máximo un descuento más la votación; la fila con más de un descuento marcado no se sube (C2). La votación se registra una sola vez: la marcada, sola o con un descuento; la automática (`ACCERELECTORAL`), solo si la fila tiene un descuento marcado (C1, C6, A14). El descuento y la votación juntos no pasan de 100%: si pasarían, se registra solo el descuento (C7). Una columna está marcada si su celda tiene contenido distinto de espacios (F4). La Secretaría de Educación no cuenta como descuento para C2 (F12); no entra en la suma de C7 (F14) y permite la votación automática, como hoy (F15). Los porcentajes de las exenciones salen de la tabla `exencion` (F11).
 5. Conceptos: 1 siempre; 19 solo pregrado; 2/3/4 según plantilla.
 6. Periodo de la solicitud: año y periodo vigentes del proyecto curricular (evento 80). Si el proyecto no tiene periodo vigente, o la consulta devuelve más de uno (A13), la fila no se sube y el mensaje pide reportarlo al área de sistemas (RE-05). La cancelación de las solicitudes previas sin imprimir abarca todos los periodos, como hoy (C8, que revierte P-7), y aplica también a los estudiantes rechazados (RE-02).
 7. Los IDs, eventos, estados, mapas y porcentajes por defecto de las cuotas provienen de "parametros" (RF-09), en solo lectura. Los porcentajes de las exenciones salen de la tabla `exencion` (F11) y los festivos, de la tabla de weboffice (F9).
@@ -230,6 +231,7 @@ Prioridad declarada en la Visión: (1) tiempo de respuesta, (2) seguridad y prot
 Un lote de hasta 1000 estudiantes se procesa en una sola petición. Los timeouts de gunicorn,
 balanceador y WSO2 AM deben permitirlo. (El valor objetivo de latencia se fija en NFR Requirements
 de Construction; aquí se fija la restricción estructural.)
+**Valores (U1 NFR Requirements, 2026-11-25, N2 y N3):** 1000 estudiantes en 60 s o menos en 95 de cada 100 lotes; hasta 10 estudiantes en 5 s o menos; límite propio de 90 s, después del cual las filas que faltan salen con `TIEMPO_AGOTADO` y no cancelan nada; los tiempos de espera de gunicorn, el balanceador y WSO2 AM, de 120 s o más (`construction/recibos_service/nfr-requirements/nfr-requirements.md`, NFR-P01 a NFR-P05).
 
 ### RNF-2 — Seguridad y cumplimiento
 - Ley 1581 de 2012; checklist de seguridad OAS; referencia OWASP Top 10 / ASVS / API Security Top 10.
@@ -245,10 +247,10 @@ de Construction; aquí se fija la restricción estructural.)
 Transacciones por solicitud (RF-10). Cero solicitudes incompletas (métrica de éxito).
 
 ### RNF-4 — Mantenibilidad / arquitectura
-Clean Architecture en `recibos_service` (domain → application → infrastructure → interfaces, dependencias hacia adentro); Flask + Blueprints; API REST con OpenAPI/Swagger (flasgger); sobre `{Success, Status, Message, Data}`; versión en ruta `/v1`; recursos en español, plural, kebab-case, sin tildes ni ñ, sin verbos CRUD. Dos repos: `recibos_service`, `recibos_mf`.
+Clean Architecture en `recibos_service` (domain → application → infrastructure → interfaces, dependencias hacia adentro); Flask + Blueprints; API REST documentada en Swagger 2.0 (`swagger/swagger.yml`, publicado en WSO2 AM; sin flasgger desde N12, 2026-11-25); sobre `{Success, Status, Message, Data}`; versión en ruta `/v1`; recursos en español, plural, kebab-case, sin tildes ni ñ, sin verbos CRUD. Dos repos: `recibos_service`, `recibos_mf`.
 
 ### RNF-5 — Observabilidad
-Auditoría JSON por petición (RF-13); trazas X-Ray; destino de logs CloudWatch Logs (OQ-T-5).
+Auditoría JSON por petición (RF-13); destino de logs CloudWatch Logs, con retención de 365 días (N8). *Cambiado el 2026-11-25 (N14 = c): sin trazas distribuidas en el MVP. Se agregan después con OpenTelemetry, porque el SDK y el daemon de X-Ray pierden el soporte el 2027-02-25.*
 
 ### RNF-6 — Pruebas / calidad
 Solo pruebas **unitarias automatizadas** en el ciclo de desarrollo (reglas de cuotas, exenciones,
@@ -263,6 +265,8 @@ nuevas; sin Lambda/serverless; contenedores en ECS.
 
 ### RNF-8 — Plazo
 Desplegado en **test** el **15/12/2026**, listo para la revisión de Seguridad.
+### RNF-9 — Disponibilidad
+Producción 24/7 con 99,9% de disponibilidad al mes, medida sobre el propio servicio: no cuentan las caídas de Oracle, MySQL, WSO2, "parametros" ni S3. Dos tareas o más en zonas distintas, despliegues sin interrupción y alarmas que atiende el grupo de infraestructura de la OAS (U1 NFR Requirements, 2026-11-25: N6 = c, N15 = a, N16 = a; NFR-A01 a NFR-A08). La extensión de resiliencia sigue desactivada (N17 = b).
 
 ---
 
@@ -336,7 +340,7 @@ reprocesar históricos. La versión trabaja solo con solicitudes nuevas. Cerrada
 ### Técnicas
 
 **OQ-T-1 — Versiones de Angular y Node** · *Decidida (supuesto)* 🔸
-Backend fijo: Python 3.12 (Flask); *actualizado el 2026-11-25 (C4 = a): se usa la última versión estable con soporte de Python, Node y Angular en todo el proyecto (máquina, imagen Docker y CI); las versiones exactas y la compatibilidad de las librerías se fijan en NFR Requirements de cada unidad.* Frontend: tomar las versiones de la rama
+Backend fijo: Python 3.12 (Flask); *actualizado el 2026-11-25 (C4 = a): se usa la última versión estable con soporte de Python, Node y Angular en todo el proyecto (máquina, imagen Docker y CI); las versiones exactas y la compatibilidad de las librerías se fijan en NFR Requirements de cada unidad.* **U1: Python 3.15 (N1, 2026-11-25).** Frontend: tomar las versiones de la rama
 `feature/clientes_nuevos` de `oas_cliente` como fuente de verdad; fijar una **Node LTS con soporte
 vigente** (no Node 16, que ya no tiene soporte) compatible con esa versión de Angular y con
 `single-spa-angular`, y la versión de TypeScript que exija ese Angular. Los valores exactos se
@@ -383,6 +387,7 @@ que la construcción de los adaptadores MySQL sea exacta.
 Por defecto: tamaño máximo **10 MB** por archivo (holgado para 1000 filas `.xls`) y retención de
 las plantillas cargadas en S3 **alineada a Ley 1581** (valor concreto a fijar con Seguridad/ARC).
 Bucket privado, cifrado, sin acceso público. Ajustable sin impacto de diseño.
+**Actualización (2026-11-25, N7 y N8):** tamaño máximo de 2 MB y retención de 365 días.
 
 **OQ-T-11 — Contrato del servicio "parametros"** · *Decidida (estrategia)* 🔺
 El contrato real (endpoints, autenticación, formato, reglas de actualización) lo entrega el usuario
@@ -413,18 +418,22 @@ Estas resoluciones dejan el **requisito** definido pero necesitan un artefacto e
 | D4 | DDL real `solicitud*`/`exencion` + modelo aprobado (OQ-T-9); `fechaPagoFacultad` ya no se usa (C3) | DBA | Adaptadores MySQL |
 | D5 | Tabla de festivos que usa hoy weboffice: base, nombre y columnas (F9). Los sábados y domingos no mueven la fecha (F10) | DBA | Adaptador de festivos (RF-05 CA3). Dependencia técnica: ya no bloquea historias |
 | D6 | Campo y formato del valor de cada regla dentro del objeto `Parametro`, id de cada regla por ambiente, URL y autenticación (OQ-T-11, acotada; el formato del sobre ya se conoce) | Usuario / OATI | Adaptador "parametros" (RF-09) |
-| D7 | Rutas SSM finales y `{parameterStore}` (OQ-T-7), destino/retención logs (OQ-T-5), límites/retención S3 (OQ-T-10) | Infraestructura / Seguridad | Infraestructura y config |
-| D10 | Crear en "parametros" (dev y test) los parámetros de las reglas que hoy están en el código PHP. Los porcentajes de las exenciones siguen en la tabla `exencion` (F11) y las fechas por facultad ya no se usan (C3). La lista sale en U1 Functional Design | OATI / ARC | Procesar lotes en test |
+| D7 | Rutas SSM finales y `{parameterStore}` (OQ-T-7), destino de los logs (OQ-T-5). El tamaño máximo (2 MB) y la retención (365 días) se decidieron el 2026-11-25 (N7, N8) | Infraestructura / Seguridad | Infraestructura y config |
+| D10 | Crear en "parametros" (dev y test) los parámetros de las reglas que hoy están en el código PHP. Los porcentajes de las exenciones siguen en la tabla `exencion` (F11) y las fechas por facultad ya no se usan (C3). La lista está en `aidlc-docs/construction/recibos_service/functional-design/business-rules.md` §11 | OATI / ARC | Procesar lotes en test |
 | D11 | Origen (URL) desde el que el root institucional carga `recibos_mf` en cada ambiente, para la lista de CORS | Arquitectura / infraestructura | U1 Infrastructure Design |
 | D12 | Política de limitación de tráfico (throttling) de la API en WSO2 AM | Arquitectura | U1 Infrastructure Design |
 | D13 | Número de proxies de confianza delante de `recibos_service` que agregan `X-Forwarded-For` (WSO2 AM, balanceador u otros), para tomar la IP correcta (RF-12 CA4, RE-13) | Infraestructura / Arquitectura | U1 Infrastructure Design |
+| D14 | Servicio TCPS y puerto de Oracle, y el certificado de la CA de Oracle y de MySQL, para verificar el servidor (N9) | DBA | U1 Infrastructure Design |
+| D15 | Canal y turnos con los que el grupo de infraestructura atiende las alarmas 24/7 (N6, N16) | Infraestructura | U1 Infrastructure Design |
+| D16 | Cuántas conexiones puede abrir el servicio: hasta 24 a MySQL y 16 a Oracle en producción, y el doble durante un despliegue (U1 NFR Design) | DBA | U1 Infrastructure Design |
+| D17 | Con el DDL (D4): que las tablas `solicitud*` sean InnoDB, la versión de MySQL y si `solicitudRecibo` tiene un índice que empiece por (`codigo_est`, `estado`); si no lo tiene, crearlo antes de producción (N19) | DBA | U1 Code Generation del repositorio de MySQL |
 
 ---
 
 ## 9. Supuestos (anulables por el usuario) 🔸
 
-- A1: tamaño máximo de archivo 10 MB (OQ-T-10).
-- A2: logs a CloudWatch Logs, con retención de al menos 90 días (SECURITY-14). El valor final se confirma con infraestructura (OQ-T-5).
+- A1: ~~tamaño máximo de archivo 10 MB (OQ-T-10)~~ **Decidido el 2026-11-25 (N7): 2 MB.**
+- A2: logs a CloudWatch Logs, con retención de al menos 90 días (SECURITY-14). El valor final se confirma con infraestructura (OQ-T-5). **Decidido el 2026-11-25 (N8): 365 días.**
 - A3: convención SSM MySQL `/{parameterStore}/recibos_service/mysql/...` (OQ-T-7).
 - A4: Node LTS vigente + versiones de `oas_cliente` para Angular/TS (OQ-T-1).
 - A5: ~~pruebas en paralelo contra copia de la base~~ → **confirmado por el usuario (2026-11-24)**: base de pruebas dedicada; la cancelación no sobrescribe producción (OQ-B-5).
@@ -500,7 +509,7 @@ La métrica de coincidencia del 100% (C-4) se mide **excluyendo** estos cambios 
 1. Sin exención "Reingreso"; plantilla de pregrado nueva, sin "Reingreso" y con las fechas de pago (Visión, C3).
 2. Sin pago diferido ni cuotas al 0% en pregrado (Visión).
 3. "Seguro Estudiantil" no se lee como número de cuotas (Visión).
-4. Descuentos no acumulables: como máximo un descuento más la votación; la fila con más de un descuento marcado no se sube (P-3, C2). La votación marcada se registra con cualquier descuento mientras la suma no pase de 100%; si pasa, se registra solo el descuento (C2, C7). Frente a hoy cambian dos casos: en pregrado, la votación marcada con un descuento de las columnas 8 a 13 se registra si la suma no pasa de 100% (hoy se quita siempre); en posgrado, la votación marcada se quita si la suma pasa de 100% (hoy se registra siempre). La votación automática da el mismo resultado que hoy (C1, C6, C7, A14). La Secretaría de Educación de posgrado no cuenta como descuento: puede ir con la votación y un descuento, como hoy (F12).
+4. Descuentos no acumulables: como máximo un descuento más la votación; la fila con más de un descuento marcado no se sube (P-3, C2). La votación marcada se registra con cualquier descuento mientras la suma no pase de 100%; si pasa, se registra solo el descuento (C2, C7). Frente a hoy cambian dos casos: en pregrado, la votación marcada con un descuento de las columnas 8 a 13 se registra si la suma no pasa de 100% (hoy se quita siempre); en posgrado, la votación marcada se quita si la suma pasa de 100% (hoy se registra siempre). La votación automática da el mismo resultado que hoy (C1, C6, C7, A14). La Secretaría de Educación de posgrado no cuenta como descuento: puede ir con la votación y un descuento, como hoy (F12). Con la Secretaría y un descuento de más de 20% (y hasta 90%), la votación automática ahora se agrega; hoy no (F14). Las exenciones se guardan en el orden votación, descuento y Secretaría (RE-24); hoy van en el orden de las columnas, con la votación automática al final.
 5. Los porcentajes de las cuotas de posgrado deben sumar 100 (P-5).
 6. ~~La cancelación de solicitudes sin imprimir se limita al periodo vigente (P-7).~~ *Ya no es un cambio: con C8 (2026-11-25) la cancelación sigue abarcando todos los periodos, como hoy. El número se conserva porque otros documentos lo citan.*
 7. Validación estricta del archivo y de las filas: tipo real del archivo, fechas existentes con año completo, porcentajes 0–100 (Entorno técnico, "Validación de entradas").
@@ -516,6 +525,8 @@ La métrica de coincidencia del 100% (C-4) se mide **excluyendo** estos cambios 
 17. El nivel del proyecto curricular del estudiante debe corresponder a la plantilla (`NIVEL_NO_CORRESPONDE`) (F5). Hoy no se revisa.
 18. Posgrado: la columna 2 (créditos o SMLV) es obligatoria y mayor que 0 (`UNIDAD_INVALIDA`) (F6), y los porcentajes de las cuotas son enteros (decisión de diseño). Hoy no se validan.
 19. Ninguna fecha ordinaria puede ser anterior al día de la carga, y en posgrado cada cuota vence después de la anterior (F7). Hoy no se revisa.
+20. Si un lote llega a su límite propio de 90 s, las filas que faltan no se suben (`TIEMPO_AGOTADO`) y no cancelan nada (N3). Hoy no hay límite.
+21. El archivo pesa como máximo 2 MB (N7). Hoy no hay límite (TD-11).
 
 ### 12.4 Preguntas nuevas
 
@@ -528,7 +539,7 @@ La métrica de coincidencia del 100% (C-4) se mide **excluyendo** estos cambios 
 
 | Extensión | Decisión | Efecto en los requisitos |
 |---|---|---|
-| Seguridad | Activa; las 15 reglas son bloqueantes | RF-14 CA2: el token se valida en cada petición, sin caché (SECURITY-08). CORS con lista explícita de orígenes en todos los ambientes (D11). Throttling en WSO2 AM (D12). Registros con nivel y `request_id`; retención de al menos 90 días (A2). Auditoría de cambios con el estado antes y después (`application-design.md` AD-23 a AD-28) |
+| Seguridad | Activa; las 15 reglas son bloqueantes | RF-14 CA2: el token se valida en cada petición, sin caché (SECURITY-08). CORS con lista explícita de orígenes en todos los ambientes (D11). Throttling en WSO2 AM (D12). Registros con nivel y `request_id`; retención de 365 días (A2, N8). Auditoría de cambios con el estado antes y después (`application-design.md` AD-23 a AD-28) |
 | Pruebas basadas en propiedades | Parcial: bloqueantes PBT-02, 03, 07, 08 y 09 | RNF-6: las pruebas unitarias del dominio incluyen pruebas basadas en propiedades con Hypothesis (por ejemplo: los porcentajes suman 100, la fecha extraordinaria no cae en festivo, se registra un solo descuento, el descuento más la votación no pasa de 100%). Siguen siendo pruebas unitarias automatizadas |
 | Resiliencia | No activa | Sin cambios; se puede activar antes del paso a producción |
 
@@ -584,5 +595,35 @@ Respuestas del usuario a las preguntas F1 a F13 de `aidlc-docs/construction/plan
 | F11 (P-15) | Los porcentajes de las exenciones se leen de la tabla `exencion`, en solo lectura; "parametros" conserva los ids y los mapas | RF-06 CA6; RF-09; P-15; D10 |
 | F12 | La Secretaría de Educación no cuenta como descuento para C2: puede ir con la votación y un descuento | RF-06 CA4; cambio acordado 4 |
 | F13 (P-10) | No se exporta la lista de no subidos en el MVP | RF-11 CA4 |
+| F14 | La Secretaría de Educación no entra en la suma de C7 (descuento + votación ≤ 100%) | RF-06 CA3; cambio acordado 4 |
+| F15 | Una fila con solo la Secretaría marcada recibe la votación automática, como hoy | RF-06 CA3 |
 
-Siguen abiertas las aclaraciones F14 (¿la Secretaría entra en la suma de C7?) y F15 (¿la Secretaría sola activa la votación automática?), en `aidlc-docs/construction/plans/recibos_service-functional-design-clarification-questions.md`.
+F14 y F15 salieron de F12 y se respondieron el mismo día ("f14 a, f15 a"). El diseño funcional de U1 está en `aidlc-docs/construction/recibos_service/functional-design/`; las reglas que hay que crear en "parametros" (D10) están en `business-rules.md` §11.
+
+### 12.9 Decisiones de U1 NFR Requirements (2026-11-25)
+Respuestas del usuario a N1 a N13 ("N1 a, N2 a, N3 a, N4 a, N5 a, N6 C, N7 a, N8 a, N9 a, N10 b, N11 a, N12 b, N13 a") y a las aclaraciones N14 a N17 ("n14 c, n15 a, n16 a, n17 b"). El detalle está en `aidlc-docs/construction/recibos_service/nfr-requirements/`.
+| Pregunta | Decisión | Afecta |
+|---|---|---|
+| N1 | Python 3.15; 3.14 de respaldo si una dependencia no se instala | OQ-T-1; AD-27 |
+| N2 | 1000 estudiantes en 60 s o menos; hasta 10 en 5 s o menos | RNF-1 |
+| N3 | Límite propio de 90 s; las filas que faltan salen con `TIEMPO_AGOTADO` y no cancelan nada | RNF-1; cambio acordado 20; AD-31 |
+| N4 | Hasta 3 lotes a la vez | NFR-C01 |
+| N5 | Bloqueo por estudiante en MySQL entre la cancelación y el guardado | AD-32; BR-T05 |
+| N6, N15, N16 | 24/7 con 99,9%, medido sobre el propio servicio; alarmas para el grupo de infraestructura | RNF-9; D15 |
+| N7 | Archivo de 2 MB como máximo | RF-01 CA2; A1; cambio acordado 21 |
+| N8 | 365 días para archivos y registros | A2; D7 |
+| N9 | TLS hacia Oracle (TCPS) y MySQL, con modo thin | D14 |
+| N10, N14 | Sin trazas en el MVP: el SDK de X-Ray pierde el soporte el 2027-02-25 | RNF-5; RF-13 CA3; AD-24; AD-33 |
+| N11 | requests en lugar de httpx | AD-08 |
+| N12 | Sin flasgger; Swagger 2.0 publicado en WSO2 AM y Swagger UI en un contenedor, en local | RNF-4; AD-13 |
+| N13 | ruff y mypy, además de SonarQube | NFR-M02 |
+| N17 | La extensión de resiliencia sigue desactivada | §12.5 |
+
+### 12.10 Decisiones de U1 NFR Design (2026-11-25)
+Respuestas del usuario a N18 a N20 ("n18 a, los dbas no cambian la claves, n19 a, n20 a"). El detalle está en `aidlc-docs/construction/recibos_service/nfr-design/`.
+
+| Pregunta | Decisión | Afecta |
+|---|---|---|
+| N18 | Un cambio de contraseña de las bases se toma con un despliegue nuevo, sin cortar el servicio. El usuario aclara que hoy los DBA no cambian las claves | NFR-S11 |
+| N19 | Si `solicitudRecibo` no tiene un índice por (`codigo_est`, `estado`), el DBA crea uno no único | RNF-1; D17 |
+| N20 | Si MySQL falla por la conexión en 5 filas seguidas, el lote deja de intentar y las filas que faltan salen con `ERROR_GUARDADO` | RF-10; BR-T04; AD-35 |

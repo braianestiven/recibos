@@ -31,7 +31,7 @@ flowchart LR
 | MySQL (`solicitud*`) | Lectura y escritura | — | SQL sobre TLS, transacciones |
 | S3 | Escritura | — | API de AWS |
 | SSM Parameter Store | Lectura al arrancar | — | API de AWS |
-| X-Ray | Trazas | — | Daemon |
+| X-Ray | No en el MVP (N14, AD-33) | — | — |
 | CloudWatch Logs | Auditoría y registros | Registros de acceso | stdout del contenedor |
 | WSO2 IS | `/oauth2/userinfo` en cada petición | Inicio de sesión a través del core | HTTPS |
 | WSO2 AM | Publica la API; throttling (D12) | Llama a la API a través de él | HTTPS |
@@ -51,7 +51,11 @@ flowchart LR
 | D3 ~~Valor de `cuota` en pregrado y demás estados~~ resuelta el 2026-11-25 (RE-21, A15) | U1 | — | — |
 | D4 DDL real, prefijo de tablas y llaves primarias | U1 | Code Generation | DBA |
 | D5 Tabla de festivos de weboffice (F9; los fines de semana no cuentan, F10) | U1 | Code Generation (dependencia técnica) | DBA |
-| F14, F15 (la Secretaría de Educación frente a C6 y C7) | U1 | Functional Design | Usuario |
+| D14 TLS de Oracle (servicio TCPS y puerto) y certificados de la CA de Oracle y MySQL (N9) | U1 | Infrastructure Design | DBA |
+| D15 Canal y turnos de las alarmas 24/7 (N6, N16) | U1 | Infrastructure Design | Infraestructura |
+| D16 Conexiones que puede abrir el servicio a Oracle y MySQL (U1 NFR Design) | U1 | Infrastructure Design | DBA |
+| D17 Con el DDL: tablas InnoDB, versión de MySQL e índice (`codigo_est`, `estado`) de `solicitudRecibo` (N19) | U1 | Code Generation | DBA |
+| ~~F14, F15~~ respondidas el 2026-11-25 (F14 = a, F15 = a) | U1 | — | — |
 | D6 Campo del valor de cada regla e ids por ambiente | U1 | Code Generation | Usuario / OATI |
 | D7 SSM, retención de registros, límites de S3 | U1, U2 | Infrastructure Design | Infraestructura / Seguridad |
 | D8 Identificador del rol ARC | U1 | Code Generation | Arquitectura |

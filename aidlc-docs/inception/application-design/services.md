@@ -7,8 +7,8 @@ Historias: US-02 a US-12, US-15. Todo ocurre en la misma petición (C-2).
 | Paso | Responsable | Acción | Si falla |
 |---|---|---|---|
 | 1 | Middlewares | Token válido (401) y rol ARC (403) | La petición no llega al caso de uso |
-| 2 | Controller | El campo `archivo` existe (400); el nombre original no pasa de la longitud de la columna `nombreOriginal` (D4) y no lleva rutas ni caracteres de control (400, SECURITY-05); el tamaño no pasa del máximo (413, `MAX_CONTENT_LENGTH`); la extensión es `.xls` y los primeros bytes son la firma OLE2 `D0 CF 11 E0 A1 B1 1A E1` (415) | No se guarda ni se registra nada |
-| 3 | `FuenteReglas.obtener` | Lee las reglas en "parametros": una llamada `GET /v1/parametro/{id}` por regla. Valida el sobre, que `Data.Id` sea el pedido y que `Data.Activo` sea verdadero, y convierte el valor (AD-21). Después lee de la tabla MySQL `exencion` los porcentajes de las exenciones del mapa (F11) | 503 si no responde; 502 si la regla no existe, está inactiva o su valor no se puede convertir, o si a una exención del mapa le falta el porcentaje en `exencion`, con el nombre de la regla o el id en el mensaje. No se registra nada |
+| 2 | Controller | El campo `archivo` existe (400); el nombre original no pasa de la longitud de la columna `nombreOriginal` (D4) y no lleva rutas ni caracteres de control (400, SECURITY-05); el tamaño no pasa del máximo de 2 MB (413, `MAX_CONTENT_LENGTH`, N7); la extensión es `.xls` y los primeros bytes son la firma OLE2 `D0 CF 11 E0 A1 B1 1A E1` (415) | No se guarda ni se registra nada |
+| 3 | `FuenteReglas.obtener` | Lee las reglas en "parametros": una llamada `GET /v1/parametro/{id}` por regla, en paralelo (8 a la vez y 10 s para todas, AD-34). Valida el sobre, que `Data.Id` sea el pedido y que `Data.Activo` sea verdadero, y convierte el valor (AD-21). Después lee de la tabla MySQL `exencion` los porcentajes de las exenciones del mapa (F11) | 503 si no responde; 502 si la regla no existe, está inactiva o su valor no se puede convertir, o si a una exención del mapa le falta el porcentaje en `exencion`, con el nombre de la regla o el id en el mensaje. No se registra nada |
 | 4 | `AlmacenamientoArchivos.guardar` | Guarda el archivo con nombre interno `lotes/{aaaa}/{mm}/{uuid4}.xls` | 503 |
 | 5 | `RepositorioSolicitudes.registrar_lote` | Inserta en `solicitudLote` (documento, nombre original, nombre interno, IP según AD-29, fecha) | 503. El archivo queda en S3 y lo elimina la política de retención |
 | 6 | `LectorPlantilla.leer` + `plantillas` | Lee la hoja, identifica el tipo y valida el formato | 422 con `id_lote` y el motivo. El lote queda registrado (P-9) |
@@ -17,8 +17,8 @@ Historias: US-02 a US-12, US-15. Todo ocurre en la misma petición (C-2).
 | 9 | `validacion_filas.validar_codigo` | Separa los códigos válidos de los inválidos. Si un código se repite, solo sigue la primera aparición (F2) | El inválido queda como rechazo de esa fila; las apariciones repetidas quedan como `CODIGO_REPETIDO` y no cancelan nada |
 | 10 | `RepositorioAcademico` | Tres lecturas en bloque: estudiantes, contextos de los proyectos curriculares y certificados electorales | 503. Todavía no se escribió ninguna solicitud |
 | 11 | `FuenteFestivos` (las dos plantillas: en pregrado la fecha extraordinaria también se calcula, F8) | Festivos de la tabla que usa hoy weboffice (F9; el DBA la identifica, D5), desde la menor fecha ordinaria hasta la mayor más un margen | 503 |
-| 12 | Dominio, fila por fila | `validacion_estudiante.validar`, y luego `generador_solicitud.generar` | Queda un rechazo con su motivo y sigue la fila siguiente |
-| 13 | `RepositorioSolicitudes.cancelar_sin_imprimir` | Cada fila con estudiante conocido, válida o rechazada (AD-30, A12): cancela en su propia transacción sus solicitudes sin imprimir de cualquier periodo (C8) | Fila válida: no se inserta la nueva y queda `ERROR_GUARDADO`. Fila rechazada: conserva su motivo. Sigue la fila siguiente |
+| 12 | Dominio, fila por fila | Antes de cada fila revisa el límite propio de 90 s, que cuenta desde que llegó la petición (AD-31, AD-34): si llegó, las filas que faltan quedan con `TIEMPO_AGOTADO` y no cancelan nada. Si no, `validacion_estudiante.validar` y luego `generador_solicitud.generar` | Queda un rechazo con su motivo y sigue la fila siguiente |
+| 13 | `RepositorioSolicitudes.cancelar_sin_imprimir` | Cada fila con estudiante conocido, válida o rechazada (AD-30, A12): toma el bloqueo del estudiante en MySQL (AD-32), que se suelta después del paso 14, y cancela en su propia transacción sus solicitudes sin imprimir de cualquier periodo (C8) | Fila válida: no se inserta la nueva y queda `ERROR_GUARDADO`. Fila rechazada: conserva su motivo. Si el bloqueo no se obtiene a tiempo, igual que si falla la cancelación. Sigue la fila siguiente |
 | 14 | `RepositorioSolicitudes.guardar_solicitud` | Solo filas válidas: una transacción con recibo, cuotas, exenciones y conceptos | Se revierte la solicitud nueva y la cancelación se mantiene (RE-02); queda `ERROR_GUARDADO` y sigue la fila siguiente (US-10) |
 | 15 | Controller | Devuelve `ResumenLote` con los estudiantes que se subieron y los que no, con su motivo (RF-11 CA3) | 201 |
 
@@ -26,7 +26,9 @@ Reglas de la orquestación:
 - Las filas se procesan en el orden de la plantilla. Si un código se repite, solo se procesa su primera aparición; las siguientes quedan como `CODIGO_REPETIDO` y no cancelan nada (F2). Hoy la fila siguiente cancela la solicitud de la anterior.
 - Las tres lecturas de Oracle del paso 10 reemplazan las cerca de 5 consultas por estudiante que hace el PHP (AD-06). El resultado es el mismo.
 - El caso de uso no conoce HTTP, Flask ni SQL. Los códigos de respuesta los pone `middlewares/errores` a partir de los errores de aplicación.
-- Si MySQL se cae a mitad del lote, cada estudiante que falta queda como `ERROR_GUARDADO`. NFR Design decidirá si conviene cortar el lote después de varios fallos de conexión seguidos.
+- Si MySQL falla por la conexión en 5 filas seguidas, el lote deja de intentar: los estudiantes que faltan quedan como `ERROR_GUARDADO` y no cancelan nada (BR-T04, AD-35, N20).
+- Todas las filas de un lote usan la misma conexión de MySQL, y ninguna sentencia sale después del límite propio: una fila a medias termina como `TIEMPO_AGOTADO` si no había confirmado la cancelación, o como `ERROR_GUARDADO` si ya la había confirmado (AD-34, AD-35).
+- Los pasos 3 a 11 tienen 30 s en total; cada llamada usa lo que queda y, si se acaba, el lote termina con 503 (DN-03, AD-34). Los tiempos de espera y los reintentos están en `construction/recibos_service/nfr-design/nfr-design-patterns.md` §3 y §4.
 
 ## UC-02 — Consultar lotes (`GET /v1/lotes`)
 
@@ -56,7 +58,7 @@ Historia: US-01.
 | Registro de aplicación | JSON a stdout con fecha, nivel, mensaje, módulo y `request_id`; sin tokens ni datos personales (AD-24) |
 | Cabeceras de seguridad | En todas las respuestas, incluidas las de error y los health checks |
 | Errores | Toda excepción termina en el sobre `{Success, Status, Message, Data}`. Los 500 no muestran trazas ni mensajes internos; el detalle queda en el log |
-| Trazas | Un segmento de X-Ray por petición y un subsegmento por llamada a "parametros", WSO2, S3, Oracle y MySQL |
+| Trazas | No van en el MVP (AD-33). Las peticiones se siguen con `request_id`, que va en los registros, en `trace_id` de la auditoría y en la cabecera `X-Request-Id` de la respuesta |
 | Configuración | Variables `RECIBOS_SERVICE_*`; los secretos se leen de SSM al arrancar; en local se usa `.env` fuera del repositorio |
 
 ## Errores de aplicación → respuesta HTTP
@@ -71,4 +73,5 @@ Historia: US-01.
 | `FormatoPlantillaInvalido` | 422 | Motivo del rechazo del lote; `Data` lleva `id_lote` |
 | `RespuestaInvalida` (dependencia) | 502 | "Mal gateway" |
 | `DependenciaNoDisponible` | 503 | "Servicio no disponible" |
+| `PlazoVencido` antes de las filas | 503 | "Servicio no disponible" |
 | Cualquier otro | 500 | "Error interno del servidor" |

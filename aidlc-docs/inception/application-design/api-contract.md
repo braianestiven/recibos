@@ -1,6 +1,6 @@
 # Contrato de la API — recibos_service v1
 
-Base: la URL que publique WSO2 AM para `recibos_service`, con el prefijo `/v1`. Todas las operaciones de `/v1` piden `Authorization: Bearer <token>` y el rol ARC. Este documento es la fuente para `swagger/swagger.yml` (U1) y para los modelos de `recibos_mf` (U2).
+Base: la URL que publique WSO2 AM para `recibos_service`, con el prefijo `/v1`. Todas las operaciones de `/v1` piden `Authorization: Bearer <token>` y el rol ARC. Este documento es la fuente para `swagger/swagger.yml` (U1, en Swagger 2.0 como el lineamiento) y para los modelos de `recibos_mf` (U2).
 
 ## Sobre de respuesta
 
@@ -14,13 +14,16 @@ Base: la URL que publique WSO2 AM para `recibos_service`, con el prefijo `/v1`. 
 ```
 
 - `Status` es un entero igual al código HTTP.
+- Todas las respuestas llevan la cabecera `X-Request-Id`, con el identificador de la petición que queda en los registros; CORS la expone a `recibos_mf` (AD-33).
+- Las respuestas de `/v1/*` llevan `Cache-Control: no-store`, porque el reporte trae códigos de estudiantes (AD-36).
+- `POST /v1/lotes` responde en unos 100 s como máximo: el límite propio de 90 s más la sentencia de MySQL que esté en curso. `recibos_mf` espera hasta 150 s (AD-34).
 - `Message` es texto en español. Sin mensaje propio, se usa el de `utils_oas` para ese código.
 - Los listados agregan `Metadata`.
 - En los errores, `Success` es `false` y `Data` es `null`, salvo en el 422 de formato.
 
 ## `POST /v1/lotes` — cargar y procesar un lote
 
-Petición: `multipart/form-data` con un campo `archivo` (plantilla `.xls`, hasta el tamaño máximo; por defecto 10 MB).
+Petición: `multipart/form-data` con un campo `archivo` (plantilla `.xls` de 2 MB como máximo).
 
 Respuesta **201**: el lote se procesó, aunque tenga estudiantes rechazados.
 
@@ -66,14 +69,14 @@ Respuesta **422**: el lote quedó registrado, pero la plantilla no tiene el form
 | 400 | Falta el campo `archivo` |
 | 401 | Falta el token o no es válido |
 | 403 | El usuario no tiene el rol ARC |
-| 413 | El archivo supera el tamaño máximo |
+| 413 | El archivo supera el tamaño máximo (2 MB) |
 | 415 | El archivo no es `.xls` (extensión o contenido real) |
 | 422 | Formato de plantilla inválido |
 | 502 | Una dependencia respondió con datos inválidos |
-| 503 | "parametros", Oracle, MySQL o S3 no responden |
+| 503 | WSO2 IS, "parametros", Oracle, MySQL o S3 no responden, o no alcanzan en los 30 s que tiene la fase previa a las filas |
 | 500 | Error inesperado |
 
-Valores de `motivo` y texto de referencia de `mensaje` (los textos finales se ajustan en U1 Functional Design):
+Valores de `motivo` y un texto de referencia de `mensaje`. Los textos finales, con sus variantes, están en `aidlc-docs/construction/recibos_service/functional-design/business-rules.md` §10:
 
 | `motivo` | `mensaje` |
 |---|---|
@@ -92,6 +95,7 @@ Valores de `motivo` y texto de referencia de `mensaje` (los textos finales se aj
 | `PORCENTAJE_INVALIDO` | El porcentaje debe estar entre 0 y 100 |
 | `DESCUENTOS_NO_ACUMULABLES` | Solo se puede marcar un descuento además de la votación (C2); en posgrado, además de la votación y de la Secretaría de Educación (F12) |
 | `PORCENTAJES_NO_SUMAN_100` | Los porcentajes de las cuotas deben sumar 100 |
+| `TIEMPO_AGOTADO` | No se alcanzó a procesar en el tiempo del lote; vuelva a cargar esta fila (N3) |
 | `ERROR_GUARDADO` | Error al guardar la solicitud |
 
 ## `GET /v1/lotes` — historial de lotes

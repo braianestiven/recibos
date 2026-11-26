@@ -1,6 +1,6 @@
 # AI-DLC State
 
-- Created / Last Updated: 2026-11-24T00:00:00Z
+- Created / Last Updated: 2026-11-24T00:00:00Z / 2026-11-25T18:08:21Z
 - Project Type: Brownfield (migración / modernización)
 - Product: Migración del módulo de recibos por lote (weboffice)
 - Current Phase: CONSTRUCTION
@@ -12,15 +12,15 @@
 
 ## Current Status
 - **Lifecycle Phase**: CONSTRUCTION
-- **Current Stage**: CONSTRUCTION — U1 recibos_service, Functional Design: F1 a F13 respondidas; aclaraciones F14 y F15 abiertas (construction/plans/recibos_service-functional-design-clarification-questions.md)
-- **Next Stage**: U1 recibos_service, NFR Requirements
-- **Status**: Units Generation APROBADA el 2026-11-25T16:45:50Z ("aprobar y continau"). En el mismo mensaje el usuario respondió C6 = b (la votación automática solo en filas con un descuento marcado), C7 = a (si el descuento y la votación pasan de 100%, se registra solo el descuento) y C8 = a (se cancelan las solicitudes sin imprimir de todos los periodos, como hoy; revierte P-7); se aplicaron a requisitos, historias, diseño y Reverse Engineering. Historias: 10 listas y 5 bloqueadas. INCEPTION completa. U1 Functional Design empezó el 2026-11-25T17:03:33Z: el plan tiene 13 preguntas (F1 a F13) y no se generan artefactos hasta que estén respondidas. Todo lo que se pregunte o responda al usuario va en español. El 2026-11-25T17:18:02Z el usuario respondió F1 a F13 ("f1 a, f2 b, f3 a, f4 a, f5 a, f6 a, f7 b, f8 a, f9 c, f10  a, f11 a, f12 b, f13 a"); se aplicaron a requisitos (§12.8 y cambios acordados 13 a 19), historias y diseño. F12 = b (la Secretaría de Educación no cuenta como descuento) abrió F14 y F15; US-08 queda bloqueada por ellas en lugar de D5.
+- **Current Stage**: CONSTRUCTION — U1 recibos_service, Code Generation Parte 2: generación del código en recibos_service/ (plan aprobado el 2026-11-25T19:50:22Z)
+- **Next Stage**: U2 recibos_mf, Functional Design (después de aprobar el código de U1)
+- **Status**: INCEPTION completa (Units Generation aprobada el 2026-11-25T16:45:50Z, con C6 b, C7 a y C8 a). U1 Functional Design APROBADO el 2026-11-25T17:55:25Z: F1 a F15 respondidas; artefactos en construction/recibos_service/functional-design/. U1 NFR Requirements empezó el 2026-11-25T18:08:21Z: el plan tiene 13 preguntas (N1 a N13) y no se generan artefactos hasta tener las respuestas. Al revisar el stack en la web aparecieron cambios que tocan decisiones aprobadas: salió Python 3.15, el SDK de X-Ray está en mantenimiento, httpx no tiene versiones desde 2024 y flasgger desde 2023. Historias: 10 listas y 5 bloqueadas. Todo lo que se pregunte o responda al usuario va en español. El 2026-11-25T18:25:20Z el usuario respondió N1 a N13 y pidió revisar la API Python `firma_electronica_mid`; el análisis está en construction/recibos_service/nfr-requirements/firma-electronica-mid-analysis.md. N10 = b choca con SECURITY-09 (el SDK de X-Ray pierde el soporte el 2027-02-25 y declara compatibilidad solo hasta Python 3.11) y N6 = c (24/7 con 99,9%) abre tres puntos: aclaraciones N14 a N17. El 2026-11-25T18:31:09Z el usuario respondió N14 a N17 ("n14 c, n15 a, n16 a, n17 b"): sin trazas en el MVP, 99,9% medido sobre el propio servicio, alarmas para infraestructura y la extensión de resiliencia desactivada. Se generaron nfr-requirements.md y tech-stack-decisions.md y se llevaron los cambios a requisitos, historias, diseño, diseño funcional y entorno técnico. U1 NFR Requirements APROBADO el 2026-11-25T18:44:18Z. U1 NFR Design empezó el 2026-11-25T18:54:52Z: el plan tiene 3 preguntas (N18 a N20) y las decisiones de procesos, conexiones y tiempos de espera. El 2026-11-25T18:58:07Z el usuario respondió N18 a N20 ("n18 a, los dbas no cambian la claves, n19 a, n20 a"). Se generaron nfr-design-patterns.md y logical-components.md (construction/recibos_service/nfr-design/) y se llevaron los cambios a los documentos anteriores (AD-34 a AD-36, BR-L16, BR-T04, NFR-R03, NFR-O05, US-10, US-15); insumos nuevos D16 y D17. U1 NFR Design APROBADO el 2026-11-25T19:31:30Z. U1 Infrastructure Design empezó el 2026-11-25T19:37:56Z: el plan tiene 5 preguntas (I1 a I5) y las decisiones de tareas, balanceador, S3, registros, alarmas, IAM, red y pipeline. El 2026-11-25T19:39:46Z el usuario aplazó U1 Infrastructure Design ("omitir la infraestructura,  dejarlo para después, pasa al paso de generar el codigo"): I1 a I5 quedan sin responder y se retoma antes del primer despliegue. U1 Code Generation empezó el 2026-11-25T19:48:59Z: plan de 18 pasos con los supuestos de los insumos pendientes, esperando la aprobación.
 
 ## Extension Configuration
 | Extension | Enabled | Decided At |
 |---|---|---|
 | Security Baseline | Yes — todas las reglas SECURITY bloqueantes | Requirements Analysis (pregunta hecha tarde, en Units Generation, 2026-11-24) |
-| Resiliency Baseline | No | Requirements Analysis (pregunta hecha tarde, en Units Generation, 2026-11-24) |
+| Resiliency Baseline | No (confirmado el 2026-11-25 en U1 NFR Requirements, N17 = b, después de elegir 24/7 con 99,9%) | Requirements Analysis (pregunta hecha tarde, en Units Generation, 2026-11-24) |
 | Property-Based Testing | Partial — bloqueantes PBT-02, PBT-03, PBT-07, PBT-08 y PBT-09; las demás son orientativas | Requirements Analysis (pregunta hecha tarde, en Units Generation, 2026-11-24) |
 
 Reglas cargadas: `extensions/security/baseline/security-baseline.md` y `extensions/testing/property-based/property-based-testing.md`. La de resiliencia no se carga. Las preguntas debían ir en Requirements Analysis (paso 5.1); se hicieron en Units Generation porque las reglas no estaban en el workspace en esa etapa.
@@ -67,11 +67,11 @@ Reglas cargadas: `extensions/security/baseline/security-baseline.md` y `extensio
 
 ## Stages (CONSTRUCTION) — según execution-plan.md
 - [~] U1 recibos_service — EN CURSO
-  - [~] Functional Design (completa) — plan y preguntas F1 a F13 (2026-11-25T17:03:33Z) → construction/plans/recibos_service-functional-design-plan.md; respuestas recibidas (2026-11-25T17:18:02Z); aclaraciones F14 y F15 abiertas
-  - [ ] NFR Requirements (estándar)
-  - [ ] NFR Design (estándar)
-  - [ ] Infrastructure Design (mínima)
-  - [ ] Code Generation
+  - [x] Functional Design (completa) — APROBADO (2026-11-25T17:55:25Z) → construction/recibos_service/functional-design/; plan: construction/plans/recibos_service-functional-design-plan.md (F1 a F15)
+  - [x] NFR Requirements (estándar) — APROBADO (2026-11-25T18:44:18Z) → construction/recibos_service/nfr-requirements/; plan: construction/plans/recibos_service-nfr-requirements-plan.md (N1 a N17)
+  - [x] NFR Design (estándar) — APROBADO (2026-11-25T19:31:30Z) → construction/recibos_service/nfr-design/; plan: construction/plans/recibos_service-nfr-design-plan.md (N18 a N20)
+  - [-] Infrastructure Design (mínima) — APLAZADA por el usuario (2026-11-25T19:39:46Z); plan con I1 a I5 sin responder → construction/plans/recibos_service-infrastructure-design-plan.md; se retoma antes del primer despliegue en test
+  - [~] Code Generation — Parte 1: plan de 18 pasos APROBADO (2026-11-25T19:50:22Z) → construction/plans/recibos_service-code-generation-plan.md; Parte 2: generación en curso
 - [ ] U2 recibos_mf: Functional Design (mínima), NFR Requirements (mínima), NFR Design (omitida), Infrastructure Design (mínima), Code Generation
 - [ ] Build and Test (ajustada: compilación, pruebas unitarias y CI)
 
@@ -90,14 +90,23 @@ Reglas cargadas: `extensions/security/baseline/security-baseline.md` y `extensio
 - [x] D3: resuelta el 2026-11-25 con el código de "Solicitados" (RE-21, supuesto A15)
 - [x] C6 = b, C7 = a, C8 = a — respondidas y aplicadas el 2026-11-25
 - [x] F1 a F13 — respondidas el 2026-11-25: f1 a, f2 b, f3 a, f4 a, f5 a, f6 a, f7 b, f8 a, f9 c, f10  a, f11 a, f12 b, f13 a
-- [ ] F14 y F15 (la Secretaría de Educación frente a C6 y C7) — preguntadas el 2026-11-25
+- [x] F14 = a y F15 = a — respondidas el 2026-11-25
+- [x] N1 a N13 — respondidas el 2026-11-25: N1 a, N2 a, N3 a, N4 a, N5 a, N6 c, N7 a, N8 a, N9 a, N10 b, N11 a, N12 b, N13 a
+- [x] N14 a N17 — respondidas el 2026-11-25: n14 c, n15 a, n16 a, n17 b
+- [ ] D14 (DBA): servicio TCPS y puerto de Oracle, y el certificado de la CA de Oracle y de MySQL (N9) — U1 Infrastructure Design
+- [ ] D15 (Infraestructura): canal y turnos de las alarmas 24/7 (N6, N16) — U1 Infrastructure Design
+- [x] N18 a N20 (plan de U1 NFR Design) — respondidas el 2026-11-25: A, A y A; en N18 el usuario aclara que los DBA no cambian las claves
+- [ ] D16 (DBA): conexiones que puede abrir el servicio a Oracle y a MySQL (hasta 24 a MySQL y 16 a Oracle, el doble durante un despliegue) — U1 Infrastructure Design
+- [ ] D17 (DBA): con el DDL (D4), confirmar que las tablas `solicitud*` son InnoDB, la versión de MySQL y si `solicitudRecibo` tiene un índice por (`codigo_est`, `estado`); si no lo tiene, crearlo antes de producción (N19) — antes de U1 Code Generation del repositorio de MySQL
+- [ ] I1 a I5 (plan de U1 Infrastructure Design) — preguntadas el 2026-11-25; sin responder porque el usuario aplazó la etapa (2026-11-25T19:39:46Z)
+- [ ] Retomar U1 Infrastructure Design antes del primer despliegue en test: I1 a I5, D7, D11 a D16, la definición de tarea, el balanceador, el bucket, las alarmas, los permisos, la red y los pasos de ECR y ECS del pipeline; las partes de infraestructura de SECURITY-02, 06, 07 y 14
 - [ ] D7 — U1 Infrastructure Design
 - [ ] D4 (ampliada: prefijo y llaves), D8 (rol ARC) — U1 Code Generation
 - [~] D6 acotada: consulta y formato del sobre conocidos; falta el campo del valor de cada regla, ids por ambiente, URL y autenticación — preguntado 2026-11-24
 - [x] P-15 → a: todas las reglas de "parametros" — 2026-11-24
 - [ ] D10 crear los parámetros de las reglas en "parametros" (OATI/ARC) — la lista sale en U1 Functional Design
 - [ ] D9 (token del core en oas_cliente) — U2 Functional Design
-- Historias (actual, 2026-11-25): 10 listas, 5 bloqueadas (US-03 D1, US-05 D2, US-07 D1, US-08 F14/F15 y D2 en la variante SMLV, US-11 D4)
+- Historias (actual, 2026-11-25): 10 listas, 5 bloqueadas (US-03 D1, US-05 D2, US-07 D1, US-08 D2, solo la variante SMLV, US-11 D4)
 
 ## Scope boundary (fuente de verdad)
 - Límite de alcance = lista "Funcionalidades IN" de vision-document.md.

@@ -10,14 +10,14 @@
 ## Pasos
 - [x] 1. Analizar el contexto de U1: definición, historias, requisitos, diseño de aplicación y hallazgos del código
 - [x] 2. Escribir este plan con las preguntas F1 a F13
-- [~] 3. Recibir las respuestas y revisar que ninguna quede ambigua; si alguna lo es, abrir un archivo de aclaraciones — F1 a F13 respondidas el 2026-11-25T17:18:02Z; F12 = b abre F14 y F15 en `recibos_service-functional-design-clarification-questions.md`
-- [ ] 4. `domain-entities.md`: entidades y objetos de valor, estados de `solicitudRecibo` (0, 1 y 2) y relaciones
-- [ ] 5. `business-rules.md`: cada regla con su identificador y su origen; orden de las validaciones; motivos de rechazo con su texto final; límites; lista de reglas que hay que crear en "parametros" (D10)
-- [ ] 6. `business-logic-model.md`: el algoritmo de `ProcesarLote` por lote y por fila, la cancelación y el guardado, el resumen, el historial y la auditoría, con diagramas y su texto equivalente
-- [ ] 7. Propiedades comprobables por componente (PBT-01), con los invariantes de PBT-03 y las idas y vueltas de PBT-02
-- [ ] 8. Casos de abuso y controles de entrada y de error (SECURITY-05, SECURITY-11, SECURITY-13 y SECURITY-15)
-- [ ] 9. Validar los artefactos (sintaxis Mermaid y contenido) y preparar los resúmenes de cumplimiento de seguridad y de PBT
-- [ ] 10. Presentar la compuerta de la etapa
+- [x] 3. Recibir las respuestas y revisar que ninguna quede ambigua; si alguna lo es, abrir un archivo de aclaraciones — F1 a F13 respondidas el 2026-11-25T17:18:02Z; F12 = b abrió F14 y F15 en `recibos_service-functional-design-clarification-questions.md`, respondidas el mismo día (F14 = a, F15 = a)
+- [x] 4. `domain-entities.md`: entidades y objetos de valor, estados de `solicitudRecibo` (0, 1 y 2) y relaciones
+- [x] 5. `business-rules.md`: cada regla con su identificador y su origen; orden de las validaciones; motivos de rechazo con su texto final; límites; lista de reglas que hay que crear en "parametros" (D10)
+- [x] 6. `business-logic-model.md`: el algoritmo de `ProcesarLote` por lote y por fila, la cancelación y el guardado, el resumen, el historial y la auditoría, con diagramas y su texto equivalente
+- [x] 7. Propiedades comprobables por componente (PBT-01), con los invariantes de PBT-03 y las idas y vueltas de PBT-02
+- [x] 8. Casos de abuso y controles de entrada y de error (SECURITY-05, SECURITY-11, SECURITY-13 y SECURITY-15)
+- [x] 9. Validar los artefactos (sintaxis Mermaid y contenido) y preparar los resúmenes de cumplimiento de seguridad y de PBT
+- [x] 10. Presentar la compuerta de la etapa (2026-11-25T17:48:01Z)
 
 ## Decisiones de diseño que no necesitan pregunta
 Se aplican salvo que digas otra cosa.
@@ -34,7 +34,7 @@ Se aplican salvo que digas otra cosa.
 - F8 = a, F9 = c y F10 = a: también en pregrado la fecha extraordinaria se calcula; solo la mueven los días que están en la tabla de festivos de weboffice.
 - F9 = c: D5 queda reducida a identificar la tabla (base, nombre y columnas) con el DBA. Es una dependencia técnica: ya no bloquea historias.
 - F11 = a: los porcentajes salen de la tabla `exencion`, como hoy en el lote PHP; revierte P-15 en ese punto. Una exención del mapa sin porcentaje en la tabla detiene el lote, como una regla que falta (AD-22).
-- F12 = b: la Secretaría de Educación no cuenta para C2. Las exenciones se guardan en el orden votación, descuento y Secretaría (RE-24). F14 y F15 aclaran cómo encaja con C6 y C7.
+- F12 = b: la Secretaría de Educación no cuenta para C2. Las exenciones se guardan en el orden votación, descuento y Secretaría (RE-24). F14 = a: no entra en la suma de C7. F15 = a: sola, también permite la votación automática, como hoy.
 
 ## Insumos que siguen pendientes
 - D1: archivo oficial de la plantilla de pregrado. F8 define cómo trae las fechas; el archivo fija las posiciones de las columnas y los encabezados.
@@ -194,3 +194,7 @@ B) Sí: un botón descarga la lista en CSV desde la pantalla del reporte. Lo arm
 C) Other (please describe after [Answer]: tag below)
 
 [Answer]: A. Respuesta del usuario: "f13 a". No se exporta en el MVP
+
+## Resultado (2026-11-25T17:48:01Z)
+Artefactos en `aidlc-docs/construction/recibos_service/functional-design/`: `domain-entities.md`, `business-rules.md` (con la lista D10 en §11 y las decisiones de diseño DF-01 a DF-10 en §12) y `business-logic-model.md` (con las propiedades comprobables en §9). U1 no tiene interfaz, así que no hay `frontend-components.md`.
+Aprobado por el usuario el 2026-11-25T17:55:25Z: "Continuar a la siguiente etapa - Aprobar el diseño funcional y pasar a NFR Requirements de U1". El 2026-11-25, al preparar NFR Requirements, se corrigió el caso de abuso de los lotes simultáneos de `business-rules.md` §13 (pregunta N5).

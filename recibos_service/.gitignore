@@ -1,0 +1,38 @@
+# Entornos y secretos locales
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Pruebas y herramientas
+.pytest_cache/
+.hypothesis/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+sbom.json
+.scannerwork/
+
+# Llaves y certificados: nunca en el repositorio (L35)
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Sistema operativo y editores
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

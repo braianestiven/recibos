@@ -1,6 +1,6 @@
 # Métodos de los componentes
 
-Firmas de diseño en Python (la última versión estable con soporte, C4; se fija en U1 NFR Requirements). Code Generation puede cambiar nombres internos, pero no las responsabilidades ni los tipos de entrada y salida. Las reglas detalladas de cada función se cierran en U1 Functional Design.
+Firmas de diseño en Python (la última versión estable con soporte, C4; se fija en U1 NFR Requirements). Code Generation puede cambiar nombres internos, pero no las responsabilidades ni los tipos de entrada y salida. Las reglas detalladas de cada función se cerraron en U1 Functional Design (2026-11-25): `aidlc-docs/construction/recibos_service/functional-design/business-rules.md`. Los plazos, la sesión de filas y los errores de persistencia se agregaron en U1 NFR Design (`aidlc-docs/construction/recibos_service/nfr-design/`).
 
 ## 1. Dominio (`app/domain/`)
 
@@ -19,7 +19,7 @@ Firmas de diseño en Python (la última versión estable con soporte, C4; se fij
 | `Cuota` | `numero: int`, `porcentaje: int` (0–100), `fechas: FechasPago` |
 | `DatosPosgrado` | `numero_cuotas: int`, `unidad: str`, `fechas_ordinarias: tuple[date, ...]`, `porcentajes: tuple[int \| None, ...]` |
 | `Solicitud` | `codigo_estudiante: int`, `codigo_carrera: int`, `periodo: Periodo`, `tipo: TipoPlantilla`, `unidad: str` (créditos o SMLV en posgrado; `"0"` en pregrado, RE-07), `cuotas: tuple[Cuota, ...]`, `exenciones: tuple[int, ...]`, `conceptos: tuple[int, ...]` |
-| `MotivoRechazo` (Enum) | `CODIGO_INVALIDO`, `CODIGO_REPETIDO`, `ESTUDIANTE_NO_ENCONTRADO`, `SIN_VALOR_MATRICULA`, `ESTADO_NO_PERMITIDO`, `CARRERA_INACTIVA`, `NO_TERMINACION_MATERIAS`, `SIN_PERIODO_VIGENTE`, `NIVEL_NO_CORRESPONDE`, `CUOTAS_INVALIDAS`, `UNIDAD_INVALIDA`, `FECHA_INVALIDA`, `PORCENTAJE_INVALIDO`, `PORCENTAJES_NO_SUMAN_100`, `DESCUENTOS_NO_ACUMULABLES`, `ERROR_GUARDADO` |
+| `MotivoRechazo` (Enum) | `CODIGO_INVALIDO`, `CODIGO_REPETIDO`, `ESTUDIANTE_NO_ENCONTRADO`, `SIN_VALOR_MATRICULA`, `ESTADO_NO_PERMITIDO`, `CARRERA_INACTIVA`, `NO_TERMINACION_MATERIAS`, `SIN_PERIODO_VIGENTE`, `NIVEL_NO_CORRESPONDE`, `CUOTAS_INVALIDAS`, `UNIDAD_INVALIDA`, `FECHA_INVALIDA`, `PORCENTAJE_INVALIDO`, `PORCENTAJES_NO_SUMAN_100`, `DESCUENTOS_NO_ACUMULABLES`, `TIEMPO_AGOTADO`, `ERROR_GUARDADO` |
 | `Rechazo` | `fila: int`, `codigo: str \| None`, `motivo: MotivoRechazo`, `detalle: str \| None` |
 | `Procesado` | `fila: int`, `codigo: int` |
 | `ResumenLote` | `id_lote: int`, `tipo: TipoPlantilla`, `total_filas: int`, `procesados: tuple[Procesado, ...]`, `rechazados: tuple[Rechazo, ...]` (RF-11 CA3) |
@@ -125,10 +125,10 @@ def seleccionar(fila: FilaPlantilla, espec: EspecificacionPlantilla, reglas: Reg
     # 1. descuentos marcados = columnas de exención marcadas, sin la de votación ni la de la Secretaría de Educación (F12)
     # 2. más de un descuento marcado: Rechazo DESCUENTOS_NO_ACUMULABLES; la fila no se sube (C2)
     # 3. votación marcada: se registra, sola o con el descuento, en las dos plantillas (C2)
-    # 4. sin votación marcada: se agrega la automática si hay certificado y hay un descuento marcado (C1, C6, A14)
-    # 5. si el descuento más la votación pasa de TOPE_EXENCIONES (100), se quita la votación y queda solo el descuento (C7)
+    # 4. sin votación marcada: se agrega la automática si hay certificado y está marcado un descuento o la Secretaría (C1, C6, F15)
+    # 5. si el descuento más la votación pasa de TOPE_EXENCIONES (100), se quita la votación y queda solo el descuento (C7); la Secretaría no entra en la suma (F14)
     # 6. la votación aparece una sola vez
-    # 7. orden: votación, descuento y al final la Secretaría (RE-24). F14 y F15 fijan cómo entra la Secretaría en 4 y 5
+    # 7. orden: votación, descuento y al final la Secretaría (RE-24)
 
 # conceptos.py
 def seleccionar(fila: FilaPlantilla, espec: EspecificacionPlantilla,
@@ -154,33 +154,43 @@ class AlmacenamientoArchivos(Protocol):
     def guardar(self, contenido: bytes, nombre_interno: str) -> None: ...
 
 class RepositorioAcademico(Protocol):
-    def estudiantes(self, codigos: Sequence[int]) -> Mapping[int, Estudiante]: ...
+    def estudiantes(self, codigos: Sequence[int], plazo: Plazo) -> Mapping[int, Estudiante]: ...
     def contextos_carrera(self, codigos_carrera: AbstractSet[int], evento_periodo: int,
-                          evento_terminacion: int) -> Mapping[int, ContextoCarrera]: ...
-    def con_certificado_electoral(self, codigos: Sequence[int]) -> frozenset[int]: ...
+                          evento_terminacion: int, plazo: Plazo) -> Mapping[int, ContextoCarrera]: ...
+    def con_certificado_electoral(self, codigos: Sequence[int], plazo: Plazo) -> frozenset[int]: ...
+        # cada llamada usa plazo.para(20) como call_timeout (AD-34); DependenciaNoDisponible, PlazoVencido
 
 class RepositorioSolicitudes(Protocol):
     def registrar_lote(self, lote: NuevoLote) -> int: ...
-    def cancelar_sin_imprimir(self, codigo_estudiante: int) -> tuple[int, ...]: ...
-        # transacción propia: estado 0 → 2 de las sin imprimir del estudiante, de cualquier periodo, como hoy (C8); devuelve los ids (AD-25, AD-30); ErrorPersistencia
-    def guardar_solicitud(self, solicitud: Solicitud, documento_usuario: str,
-                          creada_en: datetime) -> int: ...
-        # una transacción: recibo, cuotas, exenciones y conceptos; devuelve el id; ErrorPersistencia. No revierte la cancelación (RE-02)
+    def filas(self, plazo: Plazo) -> AbstractContextManager["SesionFilas"]: ...
+        # una conexión de MySQL para todas las filas del lote (AD-35); la devuelve al pool al salir
     def listar_lotes(self, limite: int, desplazamiento: int) -> Pagina[Lote]: ...
     def porcentajes_exencion(self, ids: AbstractSet[int]) -> Mapping[int, Decimal]: ...
         # solo lectura de la tabla `exencion` (F11); si falta un id: ReglaFaltante, y el lote no se procesa (AD-22)
 
+class SesionFilas(Protocol):              # U1 NFR Design: estos tres métodos estaban en RepositorioSolicitudes
+    def bloqueo_estudiante(self, codigo_estudiante: int) -> AbstractContextManager[None]: ...
+        # GET_LOCK con el nombre del estudiante, 5 s como máximo, desde antes de cancelar hasta después de guardar (AD-32); BloqueoNoObtenido si no llega
+    def cancelar_sin_imprimir(self, codigo_estudiante: int) -> tuple[int, ...]: ...
+        # transacción propia: estado 0 → 2 de las sin imprimir del estudiante, de cualquier periodo, como hoy (C8); devuelve los ids (AD-25, AD-30)
+    def guardar_solicitud(self, solicitud: Solicitud, documento_usuario: str,
+                          creada_en: datetime) -> int: ...
+        # una transacción: recibo, cuotas, exenciones y conceptos; devuelve el id. No revierte la cancelación (RE-02)
+    # los tres: PlazoVencido si el plazo venció antes de una sentencia (no la envía y cierra la conexión);
+    # ErrorConexionBD si la conexión se perdió (cuenta para el corte, AD-35); ErrorPersistencia con cualquier otro error de la base
+
 class FuenteReglas(Protocol):
-    def obtener(self) -> ReglasLiquidacion: ...                       # DependenciaNoDisponible, RespuestaInvalida
+    def obtener(self, plazo: Plazo) -> ReglasLiquidacion: ...         # en paralelo, 10 s como máximo (AD-34); DependenciaNoDisponible, RespuestaInvalida, PlazoVencido
 
 class FuenteFestivos(Protocol):
-    def festivos(self, desde: date, hasta: date) -> frozenset[date]: ...
+    def festivos(self, desde: date, hasta: date, plazo: Plazo) -> frozenset[date]: ...
 
 class ProveedorIdentidad(Protocol):
     def usuario(self, token: str) -> Usuario: ...                     # NoAutenticado
 
 class Reloj(Protocol):
     def ahora(self) -> datetime: ...                                  # America/Bogota
+    def segundos(self) -> float: ...                                  # reloj monotónico para el límite propio (AD-31)
 ```
 
 ### 2.2 Casos de uso
@@ -192,10 +202,13 @@ class CargarLoteComando:
     nombre_original: str
     usuario: Usuario
     ip: str                               # de X-Forwarded-For con los proxies de confianza (AD-29)
+    recibida_en: float                    # Reloj.segundos() al llegar la petición; el plazo del lote cuenta desde aquí (AD-34)
 
 class ProcesarLote:                       # UC-01
     def ejecutar(self, comando: CargarLoteComando) -> ResumenLote: ...
         # FormatoPlantillaInvalido(id_lote, motivo), DependenciaNoDisponible, RespuestaInvalida
+        # al llegar al límite propio (90 s, AD-31) deja de procesar filas y marca las restantes con TIEMPO_AGOTADO
+        # con 5 fallas de conexión seguidas a MySQL, marca las restantes con ERROR_GUARDADO (AD-35)
 
 class ConsultarLotes:                     # UC-02
     def ejecutar(self, limite: int, desplazamiento: int) -> Pagina[Lote]: ...
@@ -204,20 +217,40 @@ class AutorizarUsuario:                   # UC-03
     def ejecutar(self, usuario: Usuario) -> None: ...                 # AccesoDenegado
 ```
 
+### 2.3 Presupuesto de tiempo (`presupuesto.py`, U1 NFR Design)
+
+```python
+class PlazoVencido(Exception): ...
+
+@dataclass(frozen=True)
+class Plazo:
+    vence_en: float                       # segundos del reloj monotónico (Reloj.segundos)
+    reloj: Reloj
+    def restante(self) -> float: ...      # nunca negativo
+    def vigente(self) -> bool: ...
+    def exigir(self, segundos: float = 0.0) -> None: ...   # PlazoVencido si quedan `segundos` o menos
+    def para(self, maximo: float) -> float: ...            # el menor entre maximo y lo que queda; PlazoVencido si no queda nada
+    def hasta(self, otro: "Plazo") -> "Plazo": ...         # el que vence primero
+```
+
+El caso de uso crea el plazo del lote con `comando.recibida_en` más el límite propio, y el de la fase previa con `reloj.segundos()` más 30 s, recortado por el del lote (AD-34). `PlazoVencido` en la fase previa termina en 503; en las filas, en `TIEMPO_AGOTADO` o `ERROR_GUARDADO` (BR-L16).
+
 ## 3. Infraestructura (`app/infrastructure/`)
 
 | Clase | Constructor | Métodos |
 |---|---|---|
-| `RepositorioAcademicoOracle` | `engine` (`oracle+oracledb`) | Los del puerto. Consultas en bloques de hasta 1000 códigos (límite de `IN` en Oracle) |
-| `RepositorioSolicitudesMySQL` | `engine` (`mysql+pymysql`), `prefijo_tablas` | Los del puerto. `cancelar_sin_imprimir` y `guardar_solicitud` usan cada uno su propio `engine.begin()` (AD-30) |
-| `AlmacenamientoS3` | cliente boto3, `bucket` | `guardar`: `put_object` con cifrado del lado del servidor |
+| `RepositorioAcademicoOracle` | `engine` (`oracle+oracledb`) | Los del puerto. Consultas en bloques de hasta 1000 códigos (límite de `IN` en Oracle), con `arraysize` de 1000; antes de cada llamada fija `call_timeout` con `plazo.para(20)` (AD-34) |
+| `RepositorioSolicitudesMySQL` | `engine` (`mysql+pymysql`), `prefijo_tablas` | Los del puerto. `filas(plazo)` toma una conexión y la entrega a `SesionFilasMySQL`, que la usa para todas las filas; si se pierde, toma otra en la fila siguiente. Antes de cada sentencia revisa el plazo; si venció, cierra la conexión sin enviar nada más. `cancelar_sin_imprimir` y `guardar_solicitud` hacen cada uno su propia transacción en esa conexión (AD-30). Los errores 2003, 2006, 2013 y 2055 de MySQL salen como `ErrorConexionBD`; los demás, como `ErrorPersistencia` (AD-35) |
+| `AlmacenamientoS3` | cliente boto3 (2 s para conectar, 5 s de respuesta, 2 intentos), `bucket` | `guardar`: `put_object` con cifrado del lado del servidor |
 | `LectorXlrd` | — | `leer`: `xlrd.open_workbook(file_contents=...)`, primera hoja, solo celdas con contenido |
-| `ProveedorIdentidadWso2` | `url_userinfo`, cliente httpx | `usuario`: llama a `/oauth2/userinfo` en cada petición, sin caché (AD-09) |
-| `ClienteParametros` | `url_base`, `reglas: Mapping[str, EspecificacionParametro]`, cliente httpx | `obtener`: `GET /v1/parametro/{id}` por regla y arma `ReglasLiquidacion`. `_leer(id) -> ParametroDTO` valida el sobre (`Success`, `Status` 2xx como texto o entero, `Data.Id`, `Data.Activo`). `_convertir(parametro, espec) -> Any` toma el campo y aplica el formato (AD-21) |
+| `ProveedorIdentidadWso2` | `url_userinfo`, cliente de `infrastructure/http` (AD-08) | `usuario`: llama a `/oauth2/userinfo` en cada petición, sin caché (AD-09), con 2 s y 5 s; si no responde, `DependenciaNoDisponible` (503) |
+| `ClienteParametros` | `url_base`, `reglas: Mapping[str, EspecificacionParametro]`, cliente de `infrastructure/http` (AD-08), grupo de 8 hilos | `obtener(plazo)`: `GET /v1/parametro/{id}` por regla, en paralelo, con 2 s y 3 s cada una y 10 s para todas, y arma `ReglasLiquidacion`. `_leer(id) -> ParametroDTO` valida el sobre (`Success`, `Status` 2xx como texto o entero, `Data.Id`, `Data.Activo`). `_convertir(parametro, espec) -> Any` toma el campo y aplica el formato (AD-21) |
 | `FuenteFestivosWeboffice` | `engine` de la base donde está la tabla de festivos de weboffice (D5) | `festivos`: lee esa tabla en solo lectura (F9); los sábados y domingos no se agregan (F10) |
 | `LectorSsm` | cliente boto3 | `secreto(ruta) -> str` (`WithDecryption=True`) |
 | `CapturaSql` | `ContextVar[list[str]]` | `registrar(engine)`; `iniciar()`; `sentencias() -> list[str]` |
-| `RelojBogota` | — | `ahora` con `zoneinfo.ZoneInfo("America/Bogota")` |
+| `RelojBogota` | — | `ahora` con `zoneinfo.ZoneInfo("America/Bogota")`; `segundos` con `time.monotonic()` |
+| `ClienteHttp` | — | `obtener_json(url, cabeceras, conectar, responder) -> Any`: usa la sesión del hilo, no sigue redirecciones; `DependenciaNoDisponible` o `RespuestaInvalida` (AD-34) |
+| `FormateadorJson` | — | `format(registro) -> str`: JSON con `timestamp`, `level`, `message`, `module`, `request_id` y `evento` (AD-24) |
 
 Respuesta de "parametros" (según el ejemplo del usuario) y mapeo de reglas (AD-21):
 
@@ -267,11 +300,13 @@ def exito(status: int, data: Any, metadata: Any | None = None, mensaje: str | No
 def error(status: int, mensaje: str | None = None, data: Any | None = None) -> Response: ...
 
 # middlewares
+def iniciar_contexto() -> None: ...              # before_request, el primero: recibida_en y request_id (AD-34)
+def agregar_request_id(resp: Response) -> Response: ...   # after_request: X-Request-Id
 def registrar_cors(app: Flask, origenes: list[str]) -> None: ...
 def autenticar() -> None: ...                     # before_request en /v1/*: 401 / 403
 def iniciar_auditoria() -> None: ...              # before_request: limpia la captura de SQL
 def registrar_auditoria(resp: Response) -> Response: ...  # after_request en /v1/*: log JSON
 def agregar_cabeceras(resp: Response) -> Response: ...    # after_request en todas las rutas
-def registrar_trazas(app: Flask) -> None: ...     # X-Ray
+# registrar_trazas: no va en el MVP (AD-33); se agrega después con OpenTelemetry
 def registrar_manejadores_error(app: Flask) -> None: ...  # excepción → sobre institucional
 ```

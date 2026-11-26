@@ -24,8 +24,8 @@ Orden de construcción: U1 completa (diseño y código) y después U2. U2 se con
 | Responsabilidades | Validar archivo y plantilla; validar estudiantes en Oracle; calcular cuotas, exenciones y conceptos; cancelar las solicitudes sin imprimir en su propia transacción y escribir cada solicitud nueva en otra (AD-30); leer reglas de "parametros"; autenticar y autorizar cada petición; registrar la auditoría |
 | Componentes | `app/domain`, `app/application`, `app/infrastructure`, `app/interfaces` (`components.md`) |
 | Historias | US-01 y US-02 (lado servidor), US-03 a US-15 |
-| Tecnología | Python en su última versión estable con soporte (C4; hoy 3.14, se fija en NFR Requirements), Flask con Blueprints, gunicorn, flasgger (solo en local), SQLAlchemy 2.x Core (oracledb en modo thin, PyMySQL), xlrd 2.x, pydantic, httpx, boto3, aws-xray-sdk, flask-cors |
-| Pruebas | pytest y pytest-cov (≥ 80%; 100% en `app/domain`). Hypothesis para las pruebas basadas en propiedades (extensión en modo parcial; el framework se confirma en NFR Requirements, PBT-09) |
+| Tecnología | Python 3.15 (N1; 3.14 de respaldo), Flask con Blueprints, gunicorn, SQLAlchemy 2.1 Core (python-oracledb en modo thin con TLS, PyMySQL), xlrd 2.0, pydantic 2.14 o superior, requests, boto3 y flask-cors. Sin flasgger (N12), sin SDK de X-Ray (N14) y sin httpx (N11). Detalle: `construction/recibos_service/nfr-requirements/tech-stack-decisions.md` |
+| Pruebas | pytest y pytest-cov (≥ 80%; 100% en `app/domain`). Hypothesis para las pruebas basadas en propiedades (confirmado en NFR Requirements, PBT-09). ruff y mypy antes de cada commit y en Drone (N13) |
 | Etapas de Construction | Functional Design (completa), NFR Requirements (estándar), NFR Design (estándar), Infrastructure Design (mínima), Code Generation |
 
 Orden interno de construcción, para que los insumos pendientes no frenen el resto:
@@ -69,7 +69,7 @@ recibos/                          # raíz del workspace (repositorio braianestiv
 +-- recibos_service/              # U1, raíz de su futuro repositorio
 |   +-- api.py, conf/, swagger/, app/, tests/
 |   +-- Dockerfile, docker-compose.yml, .drone.yml, sonar-project.properties
-|   +-- requirements.in, requirements.txt (versiones exactas con hashes)
+|   +-- pyproject.toml, requirements.txt y requirements-dev.txt (versiones exactas con hashes), .pre-commit-config.yaml
 |   +-- .gitignore, .env.example, README.md
 +-- recibos_mf/                   # U2, raíz de su futuro repositorio (desde oas_cliente)
     +-- src/app/core/, src/app/shared/, src/app/features/lotes/
@@ -103,7 +103,7 @@ Extensión de seguridad activa. Dónde se implementa o verifica cada regla:
 | SECURITY-11 Diseño seguro | Throttling (AD-23), casos de abuso (§9 del diseño), seguridad aislada en middlewares | No carga scripts externos sin SRI | Functional Design, NFR Design |
 | SECURITY-12 Autenticación | Delegada en WSO2 IS; sin credenciales en el código | Sesión del core; no guarda el token | N/A para contraseñas, MFA y bloqueo por intentos (los maneja WSO2 IS) |
 | SECURITY-13 Integridad | xlrd y pydantic como lectores seguros; auditoría con estado antes y después (AD-25); dependencias con hashes | Integridad del `package-lock.json` | Code Generation |
-| SECURITY-14 Alertas | Alarmas por 401, 403 y 5xx; retención de al menos 90 días; sin permiso de borrado (AD-28) | Retención de los registros de acceso | Infrastructure Design |
+| SECURITY-14 Alertas | Alarmas por 401, 403 y 5xx, atendidas 24/7 por el grupo de infraestructura (N6, N16); retención de 365 días (N8); sin permiso de borrado (AD-28) | Retención de los registros de acceso | Infrastructure Design |
 | SECURITY-15 Excepciones | Manejador global, falla cerrada (AD-22), rollback por estudiante | Manejo de errores HTTP sin mostrar detalles internos | Code Generation |
 
 ## 6. Reglas de pruebas basadas en propiedades por unidad (modo parcial)
@@ -111,9 +111,9 @@ Extensión de seguridad activa. Dónde se implementa o verifica cada regla:
 | Regla | U1 | U2 |
 |---|---|---|
 | PBT-02 Ida y vuelta | Conversión fecha ↔ timestamp Unix (America/Bogota) | Por evaluar en U2 NFR Requirements |
-| PBT-03 Invariantes | Los porcentajes suman 100; la fecha extraordinaria no cae en festivo y es al menos 8 días después de la ordinaria; una solicitud lleva como máximo un descuento, y una fila con más de uno no se sube (C2); el descuento y la votación de una solicitud suman como máximo 100% (C7); la votación aparece como máximo una vez | Por evaluar |
+| PBT-03 Invariantes | Los porcentajes suman 100; la fecha extraordinaria no cae en festivo y es al menos 8 días después de la ordinaria; una solicitud lleva como máximo un descuento, y una fila con más de uno no se sube (C2); el descuento y la votación de una solicitud suman como máximo 100%, sin contar la Secretaría (C7, F14); la votación aparece como máximo una vez; las exenciones van en el orden votación, descuento y Secretaría. Lista completa: `construction/recibos_service/functional-design/business-logic-model.md` §9 | Por evaluar |
 | PBT-07 Generadores | Generadores de filas de plantilla, fechas, porcentajes y reglas que respetan los límites del negocio | — |
 | PBT-08 Reducción y reproducibilidad | Hypothesis con semilla registrada en CI | — |
-| PBT-09 Framework | Hypothesis (se confirma en U1 NFR Requirements) | fast-check, solo si aplica |
+| PBT-09 Framework | Hypothesis (confirmado en U1 NFR Requirements) | fast-check, solo si aplica |
 
 Las propiedades exactas se identifican en U1 Functional Design. En modo parcial PBT-01 es orientativa, pero PBT-03 exige que cada invariante documentado tenga su prueba.

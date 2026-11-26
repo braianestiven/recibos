@@ -16,10 +16,10 @@ flowchart TB
 
 | Capa | Puede importar | No puede importar |
 |---|---|---|
-| `domain` | Biblioteca estándar | Flask, pydantic, SQLAlchemy, boto3, httpx, xlrd, `application`, `infrastructure`, `interfaces` |
-| `application` | `domain` | Flask, SQLAlchemy, boto3, httpx, xlrd, `infrastructure`, `interfaces` |
-| `infrastructure` | `domain`, `application` (puertos), SQLAlchemy, oracledb, PyMySQL, boto3, httpx, xlrd, pydantic (para validar respuestas externas) | Flask, `interfaces` |
-| `interfaces` | `application`, `domain`, Flask, flasgger, pydantic, flask-cors, aws-xray-sdk | `infrastructure` (los adaptadores llegan desde `api.py`) |
+| `domain` | Biblioteca estándar | Flask, pydantic, SQLAlchemy, boto3, requests, xlrd, `application`, `infrastructure`, `interfaces` |
+| `application` | `domain` | Flask, SQLAlchemy, boto3, requests, xlrd, `infrastructure`, `interfaces` |
+| `infrastructure` | `domain`, `application` (puertos), SQLAlchemy, oracledb, PyMySQL, boto3, requests, xlrd, pydantic (para validar respuestas externas) | Flask, `interfaces` |
+| `interfaces` | `application`, `domain`, Flask, pydantic, flask-cors | `infrastructure` (los adaptadores llegan desde `api.py`) |
 | `api.py` | Todo | — |
 
 Code Generation agrega una prueba que falla si una capa importa lo que no debe.
@@ -67,14 +67,15 @@ sequenceDiagram
 | Sistema | Operación | Objetos | Adaptador |
 |---|---|---|---|
 | Oracle académico | Solo lectura | `ACEST`, `V_ACESTMATBRUTO`, `ACCRA`, `ACASPERI`, `ACASPERIEVENTOS`, `ACCERELECTORAL`, función `fua_verifica_evento` | `RepositorioAcademicoOracle` |
-| MySQL | Lectura y escritura | `solicitudLote` (insertar, listar), `solicitudRecibo` (insertar, cancelar), `solicitudCuota`, `solicitudExencion`, `solicitudConcepto` (insertar) | `RepositorioSolicitudesMySQL` |
+| MySQL | Lectura y escritura | `solicitudLote` (insertar, listar), `solicitudRecibo` (insertar, cancelar), `solicitudCuota`, `solicitudExencion`, `solicitudConcepto` (insertar), `exencion` (leer los porcentajes, F11) y bloqueos con nombre (`GET_LOCK`, AD-32) | `RepositorioSolicitudesMySQL` |
 | S3 | Escritura | Bucket privado, prefijo `lotes/` | `AlmacenamientoS3` |
+| Tabla de festivos de weboffice (D5) | Solo lectura | La tabla que identifique el DBA | `FuenteFestivosWeboffice` |
 | "parametros" | Solo lectura | `GET /v1/parametro/{id}` | `ClienteParametros` |
 | WSO2 IS | Lectura | `GET /oauth2/userinfo` | `ProveedorIdentidadWso2` |
-| SSM | Lectura al arrancar | Credenciales de Oracle y MySQL, dirección del daemon de X-Ray | `LectorSsm` |
+| SSM | Lectura al arrancar | Credenciales de Oracle y MySQL | `LectorSsm` |
 | CloudWatch Logs | Escritura | Auditoría JSON por stdout | `middlewares/auditoria` |
 
-Ya no se usan porque sus reglas se eliminaron o no aplican al rol único: `mntac.fua_verifica_diferido` y `ACEST.est_diferido` (no hay pago diferido), `ACRANGOSPAGO`, y las consultas de carreras por coordinador o asistente (`carrerasCoordinador`, `consultarProyectosAsistente`). Con esto la cuenta de Oracle necesita menos permisos. Tampoco se leen las tablas MySQL `exencion`, porque sus datos pasan a "parametros" (P-15 a), ni `fechaPagoFacultad`, porque las fechas vienen de la plantilla (C3); tampoco hace falta la facultad del proyecto (`ACCRA.cra_dep_cod`); la cuenta de MySQL solo necesita permisos sobre las tablas `solicitud*`.
+Ya no se usan porque sus reglas se eliminaron o no aplican al rol único: `mntac.fua_verifica_diferido` y `ACEST.est_diferido` (no hay pago diferido), `ACRANGOSPAGO`, y las consultas de carreras por coordinador o asistente (`carrerasCoordinador`, `consultarProyectosAsistente`). Con esto la cuenta de Oracle necesita menos permisos. Tampoco se lee `fechaPagoFacultad`, porque las fechas vienen de la plantilla (C3), ni hace falta la facultad del proyecto (`ACCRA.cra_dep_cod`). La cuenta de MySQL necesita permisos sobre las tablas `solicitud*` y de lectura sobre `exencion`, que sigue dando los porcentajes de las exenciones (F11), y sobre la tabla de festivos si está en MySQL (D5). *Corregido en U1 NFR Design: este párrafo decía que `exencion` no se leía, lo que cambió con F11.* La lista de permisos está en `construction/recibos_service/nfr-design/logical-components.md` §5.
 
 ## 5. Comunicación
 
@@ -84,3 +85,5 @@ Toda la comunicación es síncrona:
 - API de AWS hacia S3 y SSM.
 
 No hay colas, eventos ni procesos en segundo plano (C-2).
+
+Cada llamada tiene su tiempo de espera, y la fase previa a las filas tiene 30 s; los valores están en `construction/recibos_service/nfr-design/nfr-design-patterns.md` §3.

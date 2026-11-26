@@ -9,7 +9,7 @@
 | US-05 Formato de posgrado SMLV | Especificación y validación de la plantilla | — | 🔒 D2 |
 | US-06 Validar estudiantes en Oracle | Validaciones académicas y lecturas en bloque | — | ✅ Lista |
 | US-07 Solicitudes de pregrado | Cuota con las fechas de la plantilla, exenciones y conceptos | — | 🔒 D1 |
-| US-08 Solicitudes de posgrado | Cuotas, fechas, exenciones y conceptos | — | 🔒 F14, F15 (SMLV: D2) |
+| US-08 Solicitudes de posgrado | Cuotas, fechas, exenciones y conceptos | — | 🔒 Solo la variante SMLV (D2) |
 | US-09 Cancelar solicitudes sin imprimir | Cancelación de las sin imprimir de cualquier periodo (C8), también para los rechazados (AD-30) | — | ✅ Lista |
 | US-10 Guardar la solicitud completa o no guardarla | Transacción por solicitud nueva; la cancelación va aparte (AD-30) | — | ✅ Lista |
 | US-11 Entregar las solicitudes a "Solicitados" | Escritura en las tablas `solicitud*` | — | 🔒 D4 |
@@ -28,7 +28,8 @@ Verificación: las 15 historias tienen unidad. U1 participa en las 15 y U2 en 4 
 | RNF-2 Seguridad y cumplimiento | Todas las reglas SECURITY del backend | Token sin guardar, escape de Angular, cabeceras del servidor estático |
 | RNF-3 Integridad de datos | Transacción por solicitud nueva; cancelación en su propia transacción | — |
 | RNF-4 Mantenibilidad | Clean Architecture y contrato OpenAPI | Estructura de `oas_cliente` |
-| RNF-5 Observabilidad | Auditoría, registros y X-Ray | Registros de acceso |
+| RNF-5 Observabilidad | Auditoría y registros con `request_id`; sin trazas en el MVP (N14) | Registros de acceso |
 | RNF-6 Pruebas | pytest, Hypothesis, cobertura y SonarQube | `*.spec.ts` y SonarQube |
 | RNF-7 Costos | Infraestructura existente | Infraestructura existente |
 | RNF-8 Plazo (test, 15/12/2026) | Primero en desplegarse | Después de U1 |
+| RNF-9 Disponibilidad (24/7, 99,9%) | Dos tareas o más, despliegue sin interrupción, parada ordenada y alarmas (N6) | Se define en U2 NFR Requirements |

@@ -3,6 +3,8 @@
 Generado por aidlc-discovery el 2026-11-24T00:35:00Z.
 Tipo de proyecto: Brownfield (migración / modernización)
 
+Actualizado el 2026-11-25 en AI-DLC U1 NFR Requirements: Python 3.15 (N1), requests en lugar de httpx (N11), sin flasgger (N12), ruff y mypy (N13) y sin trazas de X-Ray en el MVP (N14).
+
 Fuentes de contexto: `vision-document.md`, `interview/technical/tech-env-answers-history.md`, `interview/technical/existing-system-analysis.md`, `interview/technical/institutional-guidelines-analysis.md` (hallazgos L#), `interview/technical/utils-oas-analysis.md`, `interview/technical/templates-analysis.md`.
 
 Este documento registra **restricciones** (qué se exige, permite y prohíbe). No es un diseño de la solución.
@@ -27,7 +29,7 @@ Este documento registra **restricciones** (qué se exige, permite y prohíbe). N
 
 | Lenguaje | Versión | Propósito | Justificación |
 |----------|---------|---------|-----------|
-| Python | Última versión estable con soporte (hoy 3.14; la versión exacta se fija en U1 NFR Requirements). Antes: 3.12 | Backend (`recibos_service`) | Decisión del usuario del 2026-11-25 (aclaración C4 de Reverse Engineering): versiones actualizadas en todo el proyecto. Lineamiento Flask de la OAS (L5); 3.8 citado en los lineamientos ya no tiene soporte (L9) |
+| Python | 3.15, la última estable, fijada en U1 NFR Requirements (N1, 2026-11-25); 3.14 de respaldo si una dependencia no se instala en 3.15. Antes: 3.12 | Backend (`recibos_service`) | Decisión del usuario del 2026-11-25 (aclaración C4 de Reverse Engineering): versiones actualizadas en todo el proyecto. Lineamiento Flask de la OAS (L5); 3.8 citado en los lineamientos ya no tiene soporte (L9) |
 | TypeScript | 5.x (la que exija la versión de Angular) | Frontend (`recibos_mf`), microcliente single-spa | Decisión de negocio; lineamientos de clientes (L14) |
 | SQL | Dialectos Oracle y MySQL | Consultas a Oracle académico (solo lectura) y a las tablas `solicitud*` | Se mantienen las bases actuales |
 
@@ -66,7 +68,7 @@ Ninguno; solo se permiten los lenguajes obligatorios. Los archivos de soporte qu
 |-----------|--------|-----------|
 | Flask (con Blueprints) | API backend | Único lineamiento Python de la OAS (L5) |
 | gunicorn | Servidor de aplicación en el contenedor | Lineamiento Flask (L6) |
-| flasgger (Swagger/OpenAPI) | Documentación de la API | Swagger exigido para desplegar en dev, test y prod (L6, L41) |
+| ~~flasgger (Swagger/OpenAPI)~~ | Documentación de la API | *Quitado por decisión del usuario (U1 NFR Requirements, N12 = b, 2026-11-25): no publica versiones desde mayo de 2023 (SECURITY-10). L41 se cumple con `swagger/swagger.yml` en Swagger 2.0, publicado en WSO2 AM; en local se ve con Swagger UI en un contenedor* |
 | Angular + single-spa-angular | Frontend (microcliente) | Arquitectura de microclientes OAS (L2); plantilla `oas_cliente` (L14) |
 | Angular Material | Componentes de interfaz | Tema institucional (L17) |
 
@@ -82,9 +84,9 @@ Ninguno; solo se permiten los lenguajes obligatorios. Los archivos de soporte qu
 | python-dotenv | Variables de entorno en desarrollo local (L7) |
 | pytest (+ pytest-cov) | Pruebas unitarias del backend |
 | boto3 | Lectura de credenciales en SSM Parameter Store (equivale a `utils_oas/ssm`, `utils_oas/database`) |
-| aws-xray-sdk | Trazas X-Ray (equivale a `utils_oas/xray`) |
-| httpx o requests | Validación del token en `/oauth2/userinfo` (equivale a `utils_oas/auditoria`) |
-| cachetools | Caché de 60 min del usuario por token (equivale a `utils_oas/auditoria`) |
+| ~~aws-xray-sdk~~ | *No se usa (N14 = c, 2026-11-25): pierde el soporte el 2027-02-25. Sin trazas en el MVP; después, OpenTelemetry* |
+| requests | Validación del token en `/oauth2/userinfo` y consulta de "parametros", siempre con tiempo de espera (N11, 2026-11-25: httpx no publica versiones desde 2024) |
+| ~~cachetools~~ | *No se usa: el token se valida en cada petición, sin caché (SECURITY-08, AD-09, AD-26)* |
 
 `utils_oas` es Go/Beego y **no se importa**. Sus contratos se reimplementan en un módulo Python del proyecto (ver "Ejemplos de código" y `utils-oas-analysis.md`).
 
@@ -125,7 +127,7 @@ Excepción: los **formatos de datos** de las tablas existentes (timestamp Unix, 
 | ECS (clusters `test` y `oas`) | Contenedores del backend y del microcliente (L43) |
 | ECR | Imágenes Docker publicadas por Drone (L43) |
 | SSM Parameter Store | Credenciales de BD y parámetros, como `SecureString` |
-| X-Ray | Trazas; dirección del daemon en SSM |
+| X-Ray | *No se usa en el MVP (N14 = c, 2026-11-25); las trazas se agregan después con OpenTelemetry* |
 | CloudWatch Logs | Logs de auditoría JSON (por confirmar, OQ-T-5) |
 | S3 | Plantillas cargadas: bucket privado, cifrado, sin acceso público, retención definida (OQ-T-10) |
 | Oracle y MySQL existentes en AWS | Solo los existentes; Oracle en solo lectura |
@@ -147,7 +149,7 @@ Excepción: los **formatos de datos** de las tablas existentes (timestamp Unix, 
 
 ### Estilo de API
 
-REST documentada con OpenAPI/Swagger (flasgger). Versión en la ruta (`/v1`); recursos en español, en plural, en minúsculas y kebab-case, sin tildes ni ñ y sin verbos CRUD en la URI; códigos HTTP correctos y respuestas vacías con 2xx (L30–L34, `lineamientos_oas/generacion_de_apis/lineamientos-endpoints.md`). Todas las respuestas y errores usan el sobre `{"Success", "Status", "Message", "Data"}` (`utils_oas/requestresponse/responses_format.go`, `utils_oas/customerrorv2/custom_errorv2.go`). Versionado SemVer: primera versión en producción `0.1.0` (L32). La API se publica en WSO2 AM.
+REST documentada en Swagger 2.0 (`swagger/swagger.yml`, publicado en WSO2 AM; sin flasgger desde N12). Versión en la ruta (`/v1`); recursos en español, en plural, en minúsculas y kebab-case, sin tildes ni ñ y sin verbos CRUD en la URI; códigos HTTP correctos y respuestas vacías con 2xx (L30–L34, `lineamientos_oas/generacion_de_apis/lineamientos-endpoints.md`). Todas las respuestas y errores usan el sobre `{"Success", "Status", "Message", "Data"}` (`utils_oas/requestresponse/responses_format.go`, `utils_oas/customerrorv2/custom_errorv2.go`). Versionado SemVer: primera versión en producción `0.1.0` (L32). La API se publica en WSO2 AM.
 
 ### Patrones de datos
 
@@ -252,12 +254,13 @@ Las pruebas de carga (líder de seguridad), funcionales, de usuario y de equival
 
 | Tipo de prueba | Herramienta |
 |-----------|------|
-| Unitarias backend | pytest + pytest-cov |
+| Unitarias backend | pytest + pytest-cov + Hypothesis (PBT-09) |
+| Estilo y tipos (backend) | ruff y mypy (N13, 2026-11-25) |
 | Unitarias frontend | La que trae `oas_cliente` (Jasmine/Karma o Jest; archivos `*.spec.ts`) |
 
 ### Controles de CI/CD
 
-En Drone: SonarQube (gate L39), pruebas unitarias y escaneo de dependencias.
+En Drone: revisión de la rama y de los commits, SonarQube (gate L39), pruebas unitarias con cobertura, ruff y mypy (N13), escaneo de dependencias (pip-audit) y SBOM (SECURITY-10).
 
 ---
 

@@ -1,0 +1,100 @@
+[build-system]
+requires = ["setuptools>=80"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "recibos_service"
+version = "0.1.0"
+description = "API de carga y procesamiento de lotes de solicitudes de recibos de matrícula (OAS, Universidad Distrital)"
+readme = "README.md"
+requires-python = ">=3.15,<3.16"
+license = "GPL-3.0-or-later"
+dependencies = [
+    "Flask>=3.1,<3.2",
+    "flask-cors>=6.0,<6.1",
+    "pydantic>=2.14,<3",
+    "SQLAlchemy>=2.1,<2.2",
+    "oracledb>=26,<27",
+    "PyMySQL>=1.2,<1.3",
+    "xlrd>=2.0,<2.1",
+    "requests>=2.34,<2.35",
+    "boto3>=1.40,<2",
+    "gunicorn>=27,<28",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=9.0,<10",
+    "pytest-cov>=7",
+    "hypothesis>=6.140,<7",
+    "ruff>=0.14",
+    "mypy>=1.18",
+    "types-requests",
+    "types-PyMySQL",
+    "pre-commit>=4",
+    "pip-tools>=7.5",
+    "pip-audit>=2.9",
+    "cyclonedx-bom>=7",
+]
+
+[tool.setuptools]
+packages = []
+
+[tool.ruff]
+line-length = 120
+target-version = "py314"
+src = [".", "app", "tests"]
+extend-exclude = ["swagger"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S", "BLE", "SIM", "RUF", "PL", "N", "A", "C4", "PT", "RET", "ARG"]
+ignore = [
+    "PLR0911",  # muchas salidas: las validaciones devuelven el primer motivo que falla
+    "PLR0912",
+    "PLR0913",  # los casos de uso reciben sus puertos por el constructor
+    "PLR0917",
+    "PLR2004",  # los números de columna de las plantillas son parte de la especificación
+    "N818",     # los errores se nombran en español (FormatoInvalido, PlazoVencido)
+    "RUF001",   # textos en español con tildes
+    "RUF002",
+    "RUF003",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "S105", "S106", "PLR2004", "ARG001", "ARG002", "S311"]
+"gunicorn.conf.py" = ["N999", "S104", "S108"]  # escucha en todas las interfaces del contenedor; latido en /dev/shm
+
+[tool.mypy]
+python_version = "3.14"
+mypy_path = "."
+packages = ["app", "conf"]
+modules = ["api"]
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+no_implicit_optional = true
+check_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = ["app.domain.*", "app.application.*"]
+strict = true
+
+[[tool.mypy.overrides]]
+module = ["xlrd", "boto3", "botocore.*", "flask_cors"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers --cov=app --cov=conf --cov=api --cov-report=term-missing --cov-report=xml --cov-fail-under=80"
+pythonpath = ["."]
+filterwarnings = ["error::DeprecationWarning:app.*"]
+
+[tool.coverage.run]
+branch = true
+source = ["app", "conf", "api"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+# Solo excluye los cuerpos `...` de los Protocol; no excluye tipos como `tuple[int, ...]`.
+exclude_also = ["if TYPE_CHECKING:", "raise NotImplementedError", ":\\s*\\.\\.\\.\\s*(#.*)?$"]
